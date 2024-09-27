@@ -5,7 +5,7 @@
     "tsconfig": "./tsconfig.base.json",
     "out": "docs",
     "emit": "docs",
-    "name": "Smartcard Library Documentation",
+    "name": "SmartcardX Library Documentation",
     "theme": "default",
     "darkHighlightTheme": "dark-plus",
     "excludePrivate": true,
