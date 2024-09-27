@@ -114,7 +114,7 @@ class Card implements ICard {
      * Also the command `Le` value gets corrected and commands is sent again upon receiving `0x6CXX` response.
      */
     set autoGetResponse(val: boolean) {
-        this._autoGetResponse = val;
+        this.setAutoGetResponse(val);
     }
 
     /** Current state of the autoGetResponse feature */
@@ -132,6 +132,14 @@ class Card implements ICard {
         let middleCallback: (err: any, response: Uint8Array) => void;
         if (!this.autoGetResponse) {
             middleCallback = (err: any, respBuffer: Uint8Array) => {
+                if (err) {
+                    this._isBusy = false;
+                    callback(
+                        err,
+                        new ResponseApdu(),
+                    );
+                    return;
+                }
                 if (respBuffer.byteLength < 2) {
                     this._isBusy = false;
                     callback(
@@ -173,6 +181,14 @@ class Card implements ICard {
             };
         } else {
             middleCallback = (err: any, respBuffer: Uint8Array) => {
+                if (err) {
+                    this._isBusy = false;
+                    callback(
+                        err,
+                        new ResponseApdu(),
+                    );
+                    return;
+                }
                 if (respBuffer.byteLength < 2) {
                     this._isBusy = false;
                     callback(
@@ -327,12 +343,10 @@ class Card implements ICard {
         }
     }
 
-    /** Submits CommandAPDU and calls provided callback upon completion */
     issueCommand(
         command: TBinData | CommandApdu,
         callback: (err: any, response: ResponseApdu) => void,
     ): void;
-    /** Submits CommandAPDU and resolves upon completion */
     issueCommand(command: TBinData | CommandApdu): Promise<ResponseApdu>;
     issueCommand(
         command: TBinData | CommandApdu,
@@ -368,9 +382,9 @@ class Card implements ICard {
             checkingErr = new Error(
                 `Command data too long; Max: ${CommandApdu.MAX_DATA_BYTE_LENGTH} bytes; Received: ${cmd.data.byteLength} bytes; cmd: [${cmd.toString()}]`,
             );
-        } else if (cmd.getLc() !== cmd.getData().length) {
+        } else if (cmd.getLc() !== cmd.getData().byteLength) {
             checkingErr = new Error(
-                `Lc and actual data length discrepancy; Lc:${cmd.getLc()} actual: ${cmd.getData().length}; cmd: [${cmd.toString()}]`,
+                `Lc and actual data length discrepancy; Lc:${cmd.getLc()} actual: ${cmd.getData().byteLength}; cmd: [${cmd.toString()}]`,
             );
         }
 
@@ -416,12 +430,7 @@ class Card implements ICard {
         }
     }
 
-    /** Emitted upon submitting command to card. Event's command apdu is the actual command submitted to the card, after transformer has been applied (if any) */
-    on(
-        eventName: 'command-issued',
-        eventHandler: (event: { card: Card; command: CommandApdu }) => void,
-    ): Card;
-    /** Emitted upon receiving response from card. Event's response apdu is the actual response received from the card, before transformation (if any) */
+    on(eventName: 'command-issued', eventHandler: (event: { card: Card; command: CommandApdu }) => void): Card;
     on(
         eventName: 'response-received',
         eventHandler: (event: {
@@ -435,12 +444,10 @@ class Card implements ICard {
         return this;
     }
 
-    /** Emitted upon submitting command to card. Event's command apdu is the actual command submitted to the card, after transformer has been applied (if any) */
     once(
         eventName: 'command-issued',
         eventHandler: (event: { card: Card; command: CommandApdu }) => void,
     ): Card;
-    /** Emitted upon receiving response from card. Event's response apdu is the actual response received from the card, before transformation (if any) */
     once(
         eventName: 'response-received',
         eventHandler: (event: {
