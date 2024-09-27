@@ -33,15 +33,19 @@ export function parseBer(input: TBinData, startOffset: number = 0): IBerObj[] {
 
     let currInOffset: number = 0;
 
-    while (currInOffset < inBuffer.length) {
+    while (currInOffset < inBuffer.byteLength) {
         let parsedTag: Tag;
         try {
             parsedTag = Tag.from(inBuffer, currInOffset);
         } catch (error: any) {
             throw error;
         }
-        // console.log(parsedTag);
+
         currInOffset += parsedTag.byteLength;
+
+        if (currInOffset >= inBuffer.byteLength) {
+            throw new Error('Unexpected end of data');
+        }
 
         let parsedLen: { value: number; byteLength: number };
         try {
