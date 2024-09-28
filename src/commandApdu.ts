@@ -40,14 +40,14 @@ export class CommandApdu {
     ); // header(4) + Lc(1) + data + Le(1)
     private bLength = 5;
 
-    /** Creates a new CommandAPDU from input
+    /** Creates a new CommandAPDU from input.
      * @param data - optional; binary data or another ComandAPDU. All data is copied.
      */
     static from(data?: TBinData | CommandApdu): CommandApdu {
         return new CommandApdu(data);
     }
 
-    /** Creates a new CommandAPDU from input
+    /** Creates a new CommandAPDU from input.
      * @param data - optional; binary data or another ComandAPDU. All data is copied.
      */
     constructor(data?: TBinData | CommandApdu) {
@@ -56,7 +56,7 @@ export class CommandApdu {
         return this.from(data);
     }
 
-    /** Overwrites this CommandAPDU with new data. Any input data is copied into internal ArrayBuffer meaning the original data can be modified without changing this CommandAPDU
+    /** Overwrites this CommandAPDU with new data. Any input data is copied into internal ArrayBuffer meaning the original data can be modified without changing this CommandAPDU.
      * @param inData - binary data or another CommandAPDU. All data is copied.
      */
     from(inData: TBinData | CommandApdu): CommandApdu {
@@ -80,12 +80,12 @@ export class CommandApdu {
             throw new Error(
                 `Expected at most ${CommandApdu.MAX_DATA_BYTE_LENGTH + 6} bytes of input data, received: ${inBuffer.byteLength} bytes`,
             );
-        if (inBuffer.byteLength <= 5) {
+            if (inBuffer.byteLength <= 5) { // 4 - only head; 5 - head + Le
             this.bLength = 5;
         } else {
             const lc = inBuffer[CommandApdu.LC_OFFSET];
             const noLeLength = 5 + lc; // 4(head) + 1(lc) + lc(data)
-            if (noLeLength === 5)
+            if (noLeLength === 5) // head 00 00; if data field is empty, Lc must be omitted, therefore it cannot be 0
                 throw new Error(
                     `Lc value cannot be 0; received data: [${hexEncode(inBuffer)}]`,
                 );
@@ -103,108 +103,108 @@ export class CommandApdu {
         return this;
     }
 
-    /** Returned byte array will reference same memory as this CommandAPDU, meaning that any change made to it will reflect on this CommandAPDU */
+    /** Returned byte array will reference same memory as this CommandAPDU, meaning that any change made to it will reflect on this CommandAPDU. */
     toByteArray(): Uint8Array {
         return this.byteArray.subarray(0, this.bLength);
     }
 
-    /** Returns hex string */
+    /** Returns hex string. */
     toString(): string {
         return hexEncode(this.toByteArray());
     }
 
-    /** Clears this CommandAPDU by setting it's content to "0x0000000000" */
+    /** Clears this CommandAPDU by setting it's content to "0x0000000000". */
     clear(): this {
         this.byteArray.set([0, 0, 0, 0, 0]);
         this.bLength = 5;
         return this;
     }
 
-    /** Returns this CommandAPDU length in bytes */
+    /** Returns this CommandAPDU length in bytes. */
     get byteLength(): number {
         return this.bLength;
     }
 
-    /** Directly sets class byte to desired value */
+    /** Directly sets class byte to desired value. */
     setCla(cla: number): this {
         this.byteArray.set([cla], CommandApdu.CLA_OFFSET);
         return this;
     }
 
-    /** Directly sets class byte to desired value */
+    /** Directly sets class byte to desired value. */
     set cla(cla: number) {
         this.setCla(cla);
     }
 
-    /** Returns class byte value */
+    /** Returns class byte value. */
     getCla(): number {
         return this.byteArray[CommandApdu.CLA_OFFSET];
     }
 
-    /** Returns class byte value */
+    /** Returns class byte value. */
     get cla(): number {
         return this.getCla();
     }
 
-    /** Directly sets instruction byte to desired value */
+    /** Directly sets instruction byte to desired value. */
     setIns(ins: number): this {
         this.byteArray.set([ins], CommandApdu.INS_OFFSET);
         return this;
     }
 
-    /** Directly sets instruction byte to desired value */
+    /** Directly sets instruction byte to desired value. */
     set ins(ins: number) {
         this.setIns(ins);
     }
 
-    /** Returns instruction byte value */
+    /** Returns instruction byte value. */
     getIns(): number {
         return this.byteArray[CommandApdu.INS_OFFSET];
     }
 
-    /** Returns instruction byte value */
+    /** Returns instruction byte value. */
     get ins(): number {
         return this.getIns();
     }
 
-    /** Directly sets P1 byte to desired value */
+    /** Directly sets P1 byte to desired value. */
     setP1(p1: number): this {
         this.byteArray.set([p1], CommandApdu.P1_OFFSET);
         return this;
     }
 
-    /** Directly sets P1 byte to desired value */
+    /** Directly sets P1 byte to desired value. */
     set p1(p1: number) {
         this.setP1(p1);
     }
 
-    /** Returns P1 byte value */
+    /** Returns P1 byte value. */
     getP1(): number {
         return this.byteArray[CommandApdu.P1_OFFSET];
     }
 
-    /** Returns P1 byte value */
+    /** Returns P1 byte value. */
     get p1(): number {
         return this.getP1();
     }
 
-    /** Directly sets P2 byte to desired value */
+    /** Directly sets P2 byte to desired value. */
     setP2(p2: number): this {
         this.byteArray.set([p2], CommandApdu.P2_OFFSET);
         return this;
     }
 
-    /** Directly sets P2 byte to desired value */
+    /** Directly sets P2 byte to desired value. */
     set p2(p2: number) {
         this.setP2(p2);
     }
 
-    /** Returns P2 byte value */
+    /** Returns P2 byte value. */
     getP2(): number {
         return this.byteArray[CommandApdu.P2_OFFSET];
     }
 
-    /** Returns P2 byte value */
+    /** Returns P2 byte value. */
     get p2(): number {
         return this.getP2();
     }
@@ -260,7 +260,7 @@ export class CommandApdu {
         this.setData(data);
     }
 
-    /**Returns command data field. Returned byte array will reference same memory as this CommandAPDU, meaning that any change made to it will reflect on this CommandAPDU */
+    /**Returns command data field. Returned byte array will reference same memory as this CommandAPDU, meaning that any change made to it will reflect on this CommandAPDU. */
     getData(): Uint8Array {
         if (this.bLength <= 5)
             return this.byteArray.subarray(
@@ -274,34 +274,33 @@ export class CommandApdu {
         );
     }
 
-    /** Returned byte array will reference same memory as this CommandAPDU, meaning that any change made to it will reflect on this CommandAPDU */
+    /** Returned byte array will reference same memory as this CommandAPDU, meaning that any change made to it will reflect on this CommandAPDU. */
     get data(): Uint8Array {
         return this.getData();
     }
 
-    /** Directly sets Le byte value. If no value is provided, Le is set to 0 */
+    /** Directly sets Le byte value. If no value is provided, Le is set to 0. */
     setLe(le: number = 0): this {
         this.byteArray[this.bLength - 1] = le;
         return this;
     }
 
-    /** Directly sets Le byte value */
+    /** Directly sets Le byte value. */
     set le(le: number) {
         this.setLe(le);
     }
 
-    /** Returns Le byte value */
+    /** Returns Le byte value. */
     getLe(): number {
         return this.byteArray[this.bLength - 1];
     }
 
-    /** Returns Le byte value */
+    /** Returns Le byte value. */
     get le(): number {
         return this.getLe();
     }
 
     // =========================================================================
-
     // class byte helpers
 
     /** Sets m.s.b. of CLA byte to 1, marking command as having proprietary format */
@@ -310,21 +309,19 @@ export class CommandApdu {
         return this;
     }
 
-    /** Sets m.s.b. of CLA byte to 0, marking command as having interindustry format
-     * All newly created commands are set as interindustry by default
-     */
+    /** Sets m.s.b. of CLA byte to 0, marking command as having interindustry format. All newly created commands are set as interindustry by default. */
     setInterindustry(): this {
         this.byteArray[CommandApdu.CLA_OFFSET] &= 0x7f;
         return this;
     }
 
-    /** Returns true if CLA bytes indicates a proprietary command format*/
+    /** Returns true if CLA bytes indicates a proprietary command format. */
     get isProprietary(): boolean {
         if (this.byteArray[CommandApdu.CLA_OFFSET] & 0x80) return true;
         return false;
     }
 
-    /** Type4 can use 4 logical channels (0-3) while type16 can use 16 logical channels (4-19)*/
+    /** Type4 can use 4 logical channels (0-3) while type16 can use 16 logical channels (4-19). */
     setType(type: 4 | 16): this {
         switch (type) {
             case 4:
@@ -341,7 +338,7 @@ export class CommandApdu {
         return this;
     }
 
-    /** Type4 can use 4 logical channels (0-3) while type16 can use 16 logical channels (4-19)*/
+    /** Type4 can use 4 logical channels (0-3) while type16 can use 16 logical channels (4-19). */
     get type(): 4 | 16 {
         if ((this.byteArray[CommandApdu.CLA_OFFSET] & 0x60) === 0) {
             // & 0110 0000
@@ -356,19 +353,19 @@ export class CommandApdu {
         }
     }
 
-    /** Marks command as the last (or only) command of a chain. This is the default state for every new CommandAPDU */
+    /** Marks command as the last (or only) command of a chain. This is the default state for every new CommandAPDU. */
     setLastOfChain(): this {
         this.byteArray[CommandApdu.CLA_OFFSET] &= 0xef;
         return this;
     }
 
-    /** Marks command as NOT the last command of a chain */
+    /** Marks command as NOT the last command of a chain. */
     setNotLastOfChain(): this {
         this.byteArray[CommandApdu.CLA_OFFSET] |= 0x10;
         return this;
     }
 
-    /** Returns true if the CommandAPDU is marked as the last (or only) command of a chain */
+    /** Returns true if the CommandAPDU is marked as the last (or only) command of a chain. */
     get isLastOfChain(): boolean {
         if ((this.byteArray[CommandApdu.CLA_OFFSET] & 0x10) === 0) {
             return true;
@@ -376,9 +373,9 @@ export class CommandApdu {
         return false;
     }
 
-    /** selects logical channel to use
-     * `Type4` supports channels 0-3
-     * `Type16` supports channels 4-19
+    /** Selects logical channel to use.
+     * - `Type4` supports channels 0-3
+     * - `Type16` supports channels 4-19
      */
     setLogicalChannel(channel: number): this {
         if (this.type === 4) {
@@ -403,7 +400,9 @@ export class CommandApdu {
     }
 
     /** Returns command logical channel.
-     * 0-3 for `Type4`, 4-19 for `Type16` commands */
+     * - 0-3 for `Type4` comands
+     * - 4-19 for `Type16` commands
+     * */
     get logicalChannel(): number {
         const type = this.type;
         switch (type) {
@@ -415,11 +414,11 @@ export class CommandApdu {
     }
 
     /**
-     * Sets secure messaging bits in CLA byte
-     * `0` - no secure messaging; `Type4` and `Type16` APDUs
-     * `1` - proprietary secure messaging (e.g. GP); `Type4` and `Type16` APDUs
-     * `2` - Iso7816 secure messages; no header auth; only `Type4` APDUs
-     * `3` - Iso7816 secure messages; with header auth; only `Type4` APDUs
+     * Sets secure messaging bits in CLA byte.
+     * - `0` - no secure messaging; `Type4` and `Type16` APDUs
+     * - `1` - proprietary secure messaging (e.g. GP); `Type4` and `Type16` APDUs
+     * - `2` - Iso7816 secure messages; no header auth; only `Type4` APDUs
+     * - `3` - Iso7816 secure messages; with header auth; only `Type4` APDUs
      */
     setSecMgsType(type: 0 | 1 | 2 | 3): this {
         if (type < 0 || type > 3)
@@ -446,15 +445,11 @@ export class CommandApdu {
     }
 
     /**
-     * Gets secure messaging type from CLA byte
-     *
-     * `0` - no secure messaging; `Type4` and `Type16` APDUs;
-     *
-     * `1` - proprietary secure messaging (e.g. GP); `Type4` and `Type16` APDUs;
-     *
-     * `2` - Iso7816 secure messages; no header auth; only `Type4` APDUs;
-     *
-     * `3` - Iso7816 secure messages; with header auth; only `Type4` APDUs;
+     * Gets secure messaging type from CLA byte.
+     * - `0` - no secure messaging; `Type4` and `Type16` APDUs
+     * - `1` - proprietary secure messaging (e.g. GP); `Type4` and `Type16` APDUs
+     * - `2` - Iso7816 secure messages; no header auth; only `Type4` APDUs
+     * - `3` - Iso7816 secure messages; with header auth; only `Type4` APDUs
      */
     get secMgsType(): number {
         const cmdType = this.type;
