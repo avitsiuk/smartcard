@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - added CHANGELOG.md to package files
+### Fixed
+
+- ICard.issueCommand() overload type
+- ICard.issueCommand() unhandled error during submission
 
 ## [0.8.1] - 2024-09-23
 
