@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { hexEncode, importBinData, TBinData } from './utils';
+import Logger from './logger';
 import { CommandApdu } from './commandApdu';
 import ResponseApdu from './responseApdu';
 import { ICard, IDevice, TCardEventName } from './typesInternal';
@@ -24,12 +24,15 @@ class Card implements ICard {
         | ((rsp: ResponseApdu) => ResponseApdu);
 
     constructor(device: IDevice, atr: Uint8Array, protocol: number) {
+        Logger.trace(`Creating card instance for device "${device.name}"`);
         this._device = device;
         this._protocol = protocol;
         this._atr = new Uint8Array(atr.byteLength);
         importBinData(atr, this._atr);
         this._atrHex = hexEncode(this._atr);
         this._isBusy = false;
+        Logger.debug(`Card ATR: [${hexEncode(atr)}]`);
+        Logger.debug(`Card protocol: ${protocol}`);
     }
 
     get protocol(): number {
@@ -56,6 +59,11 @@ class Card implements ICard {
      * Can be used to add secure session authentication
      */
     setCommandTransformer(func?: (cmd: CommandApdu) => CommandApdu): this {
+        if (typeof func === 'function') {
+            Logger.trace('Setting card command transformer');
+        } else {
+            Logger.trace('Removing card command transformer');
+        }
         this._commandTransformer = func;
         return this;
     }
@@ -71,6 +79,7 @@ class Card implements ICard {
         if (typeof this._commandTransformer === 'undefined') {
             return cmd;
         } else {
+            Logger.trace('Applying command transformer');
             return this._commandTransformer(cmd);
         }
     }
@@ -79,6 +88,11 @@ class Card implements ICard {
      * Can be used to add secure session authentication
      */
     setResponseTransformer(func?: (rsp: ResponseApdu) => ResponseApdu): this {
+        if (typeof func === 'function') {
+            Logger.trace('Setting card response transformer');
+        } else {
+            Logger.trace('Removing card response transformer');
+        }
         this._responseTransformer = func;
         return this;
     }
@@ -96,6 +110,7 @@ class Card implements ICard {
         if (typeof this._responseTransformer === 'undefined') {
             return rsp;
         } else {
+            Logger.trace('Applying response transformer');
             return this._responseTransformer(rsp);
         }
     }
@@ -105,6 +120,7 @@ class Card implements ICard {
      * Also the command `Le` value gets corrected and commands is sent again upon receiving `0x6CXX` response.
      */
     setAutoGetResponse(val: boolean = true): this {
+        Logger.trace(`Setting autoGetResponse to "${val}"`);
         this._autoGetResponse = val;
         return this;
     }
@@ -232,12 +248,14 @@ class Card implements ICard {
                     let cmdToResend: CommandApdu | undefined;
                     switch (true) {
                         case response.hasMoreBytesAvailable:
+                            Logger.trace('Getting response automatically...');
                             cmdToResend = Iso7816Commands.getResponse(
                                 response.availableResponseBytes,
                             );
                             doCommandTransform = false;
                             break;
                         case response.isWrongLe:
+                            Logger.trace('Fixing command Le value...');
                             cmdToResend = new CommandApdu(cmd).setLe(
                                 response.availableResponseBytes,
                             );
@@ -352,6 +370,7 @@ class Card implements ICard {
         command: TBinData | CommandApdu,
         callback?: (err: any, response: ResponseApdu) => void,
     ): void | Promise<ResponseApdu> {
+        Logger.trace('Issuing command to card');
         let cmd: CommandApdu;
         if (command instanceof CommandApdu) {
             cmd = command;
