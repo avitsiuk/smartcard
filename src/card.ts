@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import Logger from './logger';
+import { hexEncode, IAtrInfo, importBinData, TBinData, decodeAtr } from './utils';
 import { CommandApdu } from './commandApdu';
 import ResponseApdu from './responseApdu';
 import { ICard, IDevice, TCardEventName } from './typesInternal';
@@ -15,6 +16,7 @@ class Card implements ICard {
     private _protocol: number;
     private _atr: Uint8Array;
     private _atrHex: string;
+    private _decodedAtr: IAtrInfo | null = null;
     private _autoGetResponse: boolean = true;
     private _commandTransformer:
         | undefined
@@ -28,7 +30,14 @@ class Card implements ICard {
         this._device = device;
         this._protocol = protocol;
         this._atr = new Uint8Array(atr.byteLength);
-        importBinData(atr, this._atr);
+        try {
+            importBinData(atr, this._atr);
+            this._decodedAtr = decodeAtr(this._atr);
+        } catch (error: any) {
+            const err = new Error(`Error importing card ATR: ${error.message}`);
+            Logger.error(err);
+            throw err;
+        }
         this._atrHex = hexEncode(this._atr);
         this._isBusy = false;
         Logger.debug(`Card ATR: [${hexEncode(atr)}]`);
@@ -45,6 +54,10 @@ class Card implements ICard {
 
     get atrHex(): string {
         return this._atrHex;
+    }
+
+    get decodedAtr(): IAtrInfo | null {
+        return this._decodedAtr;
     }
 
     isBusy(): boolean {
