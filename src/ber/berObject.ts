@@ -279,16 +279,16 @@ export class BerObject implements IBerObj {
     }
 
     private printInternal(
-        printFn: (berObj: BerObject, lvl: number, line: string) => void,
+        printFn: (line: string, lvl: number, berObj: BerObject) => void,
         spaces: number = 4,
         level: number = 0,
     ): void {
         let line: string = `${''.padEnd(level * spaces, ' ')}${this.isRoot() ? 'ROOT' : this._tag.hex} (${this._len} bytes):`;
         if (this.isPrimitive()) {
             line += ` ${hexEncode(this.value)}`;
-            printFn(this, level, line);
+            printFn(line, level, this);
         } else if (this.isConstructed()) {
-            printFn(this, level, line);
+            printFn(line, level, this);
             for (let i = 0; i < this.value.length; i++) {
                 (this.value[i] as BerObject).printInternal(
                     printFn,
@@ -301,17 +301,17 @@ export class BerObject implements IBerObj {
 
     /**
      * If no custom function is provided, prints object using `console.log`
-     * @param printFn - custom print function. gets the object being currently printed, current depth level and proposed line.
+     * @param printFn - custom print function. gets the proposed line to print, current depth level and object being currently printed.
      * @param spaces - number of spaces used for indenting one level (default: `4`)
      */
     print(
-        printFn?: (berObj: BerObject, lvl: number, line: string) => void,
+        printFn?: (line: string, lvl: number, berObj: BerObject) => void,
         spaces: number = 4,
     ): void {
-        const f: (berObj: BerObject, lvl: number, line: string) => void =
+        const f: (line: string, lvl: number, berObj: BerObject) => void =
             printFn
                 ? printFn
-                : (_obj, _lvl, line) => {
+                : (line, _lvl, _obj) => {
                       console.log(line);
                   };
         this.printInternal(f, spaces, 0);
