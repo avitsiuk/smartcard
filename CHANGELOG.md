@@ -6,11 +6,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [unreleased]
+## [0.9.0] - unreleased
+
+### Changed
+
+- Card ATR now gets decoded automatically and is available from `<cardInstance>.decodedAtr`
 
 ### Added
 
 - added CHANGELOG.md to package files
+- additional ber parser check for better error description
+- BerObject path list caching. Now the list won't be rebuilt for every single search. Cache must be invalidated manually upon editing BerObject.
 ### Fixed
 
 - ICard.issueCommand() overload type
