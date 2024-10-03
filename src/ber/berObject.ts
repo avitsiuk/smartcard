@@ -41,6 +41,7 @@ export class BerObject implements IBerObj {
     private _tag: Tag = new Tag();
     private _len: number = 0;
     private _val: Uint8Array | BerObject[] = [];
+    private pathListCache: TBerObjectPath[] | null = null;
 
     /**
      * Parses input data and creates corresponding BER object
@@ -125,6 +126,7 @@ export class BerObject implements IBerObj {
         } catch (error: any) {
             throw new Error(`Error parsing ber data: ${error.message}`);
         }
+        this.invalidatePathListCache();
         return this.setConstructedValue(parseResult);
     }
 
@@ -133,60 +135,57 @@ export class BerObject implements IBerObj {
      * @param input - Info object describing BER to be created
      */
     create(input: IBerObjInfo): this {
-        if (
-            typeof input === 'object' &&
-            typeof this['tag'] !== 'undefined' &&
-            typeof this['value'] !== 'undefined'
+        if (typeof input !== 'object'
+            || typeof this['tag'] === 'undefined'
+            || typeof this['value'] === 'undefined'
         ) {
-            let tag: Tag;
-            try {
-                tag = new Tag(input.tag);
-            } catch (error: any) {
-                throw new Error(
-                    `Ber object creation error: Could not import tag: ${error.message}`,
-                );
-            }
-            if (isBinData(input.value)) {
-                if (tag.isPrimitive) {
-                    // primitive tag, do not decode value
-                    try {
-                        this._val = importBinData(input.value);
-                    } catch (error: any) {
-                        throw new Error(
-                            `Ber object creation error: Could not import binary value for primitive tag "${tag.hex}": ${error.message}`,
-                        );
-                    }
-                    this._len = this._val.byteLength;
-                    this._tag = new Tag(input.tag);
-                    return this;
-                } else {
-                    // constructed tag, parse binary value
-                    let parseResult: IBerObj[];
-                    try {
-                        parseResult = parseBer(input.value);
-                    } catch (error: any) {
-                        throw new Error(
-                            `Ber object creation error: Could not parse binary value for constructed tag "${tag.hex}": ${error.message}`,
-                        );
-                    }
-
-                    this._tag = tag;
-                    return this.setConstructedValue(parseResult);
-                }
-            } else {
-                if (tag.isPrimitive && tag.byteLength > 0) {
+            throw new Error('Unknown format of BerObject creation info');
+        }
+        this.invalidatePathListCache();
+        let tag: Tag;
+        try {
+            tag = new Tag(input.tag);
+        } catch (error: any) {
+            throw new Error(
+                `Ber object creation error: Could not import tag: ${error.message}`,
+            );
+        }
+        if (isBinData(input.value)) {
+            if (tag.isPrimitive) {
+                // primitive tag, do not decode value
+                try {
+                    this._val = importBinData(input.value);
+                } catch (error: any) {
                     throw new Error(
-                        `Tag "${tag.hex}" is primitive, while the value is not.`,
+                        `Ber object creation error: Could not import binary value for primitive tag "${tag.hex}": ${error.message}`,
+                    );
+                }
+                this._len = this._val.byteLength;
+                this._tag = new Tag(input.tag);
+                return this;
+            } else {
+                // constructed tag, parse binary value
+                let parseResult: IBerObj[];
+                try {
+                    parseResult = parseBer(input.value);
+                } catch (error: any) {
+                    throw new Error(
+                        `Ber object creation error: Could not parse binary value for constructed tag "${tag.hex}": ${error.message}`,
                     );
                 }
 
                 this._tag = tag;
-                return this.setConstructedValue(input.value);
-
-                // create other objects from object array in value
+                return this.setConstructedValue(parseResult);
             }
         } else {
-            throw new Error('Unknown format of BerObject creation info');
+            if (tag.isPrimitive && tag.byteLength > 0) {
+                throw new Error(
+                    `Tag "${tag.hex}" is primitive, while the value is not.`,
+                );
+            }
+
+            this._tag = tag;
+            return this.setConstructedValue(input.value);
         }
     }
 
@@ -318,7 +317,28 @@ export class BerObject implements IBerObj {
         this.printInternal(f, spaces, 0);
     }
 
+    private genPathList(): TBerObjectPath[] {
+        const result: TBerObjectPath[] = [];
+        if (this.isConstructed()) {
+            for (let childIdx = 0; childIdx < this.value.length; childIdx++) {
+                result.push({
+                    hex: `/${this.value[childIdx].tag.hex.toLowerCase()}`,
+                    indexes: [childIdx],
+                });
+                this.value[childIdx].genPathList().reduce((_, childPath) => {
+                    result.push({
+                        hex: `/${this.value[childIdx].tag.hex.toLowerCase()}${childPath.hex.toLowerCase()}`,
+                        indexes: [childIdx, ...childPath.indexes],
+                    });
+                    return null;
+                }, null);
+            }
+        }
+        return result;
+    }
+
     /** This method will return an array of all possible paths in two formats: named and indexed.
+     * @param invalidateCache - Default: `false`; If `true`, nvalidates and completely rebuilds cache before returning
      * @example BerObject.parse('6F1A840E315041592E5359532E4444463031A5088801025F2D02656E6F1A840E315041592E5359532E4444463031A5088801025F2D02656E6F12840E315041592E5359532E4444463031A500').genPathList()
      * ```
      *[
@@ -337,45 +357,47 @@ export class BerObject implements IBerObj {
      *  { named: '/6f/a5', indexed: [ 2, 1 ] }
      *]
      */
-    genPathList(): TBerObjectPath[] {
-        const result: TBerObjectPath[] = [];
-        if (this.isConstructed()) {
-            for (let childIdx = 0; childIdx < this.value.length; childIdx++) {
-                result.push({
-                    hex: `/${this.value[childIdx].tag.hex}`,
-                    indexes: [childIdx],
-                });
-                this.value[childIdx].genPathList().reduce((_, childPath) => {
-                    result.push({
-                        hex: `/${this.value[childIdx].tag.hex}${childPath.hex}`,
-                        indexes: [childIdx, ...childPath.indexes],
-                    });
-                    return null;
-                }, null);
-            }
+    getPathList(invalidateCache: boolean = false): TBerObjectPath[] {
+        if (invalidateCache) {
+            this.invalidatePathListCache();
         }
-        return result;
+        if (!this.pathListCache) {
+            this.pathListCache = this.genPathList();
+        }
+        return this.pathListCache;
+    }
+
+    /** Method for manual path list cache invalidation. Must be called after modifying BerObject structure */
+    invalidatePathListCache(): BerObject {
+        this.pathListCache = null;
+        return this;
     }
 
     /**
      * Searches for tags inside this ber object and returns an array of all corresponding tags
-     * @param query - search query in format `/<hex>/.../<hex>`. `*` and `**` can be used instead of hex values. `*` - indicates a single tag, while `**` indicates any number of tags (even 0). Any number of `*` and `**` can be used in one search query. Search query MUST start with `/` and end with a value. A value can be either `*`, `**` or a hex string. Values cannot be mixed.
+     * @param query - search query in format `/<hex>/.../<hex>`.
+     * - `*` and `**` can be used instead of hex values.
+     * - `*` indicates a single tag, while `**` indicates any number of tags (even 0).
+     * - Any number of `*` and `**` can be used in one search query.
+     * - Search query MUST start with `/` and end with a value.
+     * - A value can be either `*`, `**` or a hex string. Values cannot be mixed.
      * @returns - array of all found tags matching the criteria
-     * @example BerObject.parse('hexString').search('/**\/06') // this will return every single OID primitive object in this BER on any level
-     * @example BerObject.parse('hexString').search('/*\/06') // this will return every single OID primitive object in this BER, but ONLY 2 levels deep
+     * @example // Note that the following examples have spaces in their search queries. This is to prevent the premature closing of JSDoc comments. No spaces are alowed in search queries.
+     * @example BerObject.parse('hexString').search('/** /06') // this will return every single OID primitive object in this BER on any level
+     * @example BerObject.parse('hexString').search('/* /06') // this will return every single OID primitive object in this BER, but ONLY 2 levels deep
      */
     search(query: string): BerObject[] {
         if (!isValidBerSearchQuery(query))
             throw new Error('Invalid search query');
 
-        let regexString = query
+        let regexString = query.toLowerCase()
             .replace(/\/\*\*/g, '(\\/[0-9a-fA-F]*)*')
             .replace(/\/\*/g, '(\\/[0-9a-fA-F]*)')
             .replace(/(\/)([0-9a-fA-F])/g, '\\/$2');
 
         regexString = `^${regexString}$`;
 
-        const matchingPaths = this.genPathList().filter((path) => {
+        const matchingPaths = this.getPathList().filter((path) => {
             if (path.hex.match(regexString)) {
                 return true;
             } else {
