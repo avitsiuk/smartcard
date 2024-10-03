@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - added CHANGELOG.md to package files
 - additional ber parser check for better error description
 - BerObject path list caching. Now the list won't be rebuilt for every single search. Cache must be invalidated manually upon editing BerObject.
+- `BerObject.invalidatePathListCache()` method for manual cache invalidation.
 ### Fixed
 
 - ICard.issueCommand() overload type
