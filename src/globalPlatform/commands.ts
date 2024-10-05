@@ -1,9 +1,31 @@
-import { BerObject, Tag, IBerObjInfo } from '../ber/index';
 import CommandApdu from '../commandApdu';
-import { importBinData, TBinData } from '../utils';
+import { TBinData } from '../utils';
 import { ins as gpIns } from './values';
 import { ins as isoIns } from '../iso7816/values';
 
+/** Used to retrieve either a single BER-TLV-coded data object, which may be constructed, or a set of BER-TLV-coded data objects.
+ * @param highTagByte - high order tag byte (or `0x00`, if tag is 1 byte long)
+ * @param lowTagByte - low order tag byte
+ * @param data - This shall be empty unless a tag list and/or a MAC is required. For retrieving a list of applications present on the card (P1-P2 set to '0x2F00') a tag list shall be present and coded as '0x5C00'.
+*/
+export function getData(highTagByte: number, lowTagByte: number, data?: TBinData): CommandApdu {
+
+    const cmd = new CommandApdu()
+        .setCla(0x80)
+        .setIns(gpIns.GET_DATA)
+        .setP1(highTagByte)
+        .setP2(lowTagByte);
+
+    if(typeof data !== 'undefined') {
+        try {
+            cmd.setData(data);
+        } catch (error: any) {
+            throw new Error(`getData command error: ${error}`);
+        }
+    }
+
+    return cmd;
+}
 export function initUpdate(
     hostChallenge: TBinData,
     keyVer: number = 0,
