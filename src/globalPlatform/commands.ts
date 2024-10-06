@@ -26,18 +26,27 @@ export function getData(highTagByte: number, lowTagByte: number, data?: TBinData
 
     return cmd;
 }
+
+/** The INITIALIZE UPDATE command is used, during explicit initiation of a Secure Channel, to transmit card and session data between the card and the host. This command initiates the initiation of a Secure Channel Session.
+ * @param keyVer - defines the Key Version Number within the Security Domain to be used to initiate the Secure Channel Session. If this value is zero, the first available key chosen by the Security Domain will be used.
+ * @param hostChallenge - bytes of host challenge. This challenge, chosen by the off-card entity, should be unique to each session.
+*/
 export function initUpdate(
+    keyVer: number,
     hostChallenge: TBinData,
-    keyVer: number = 0,
-    keyId: number = 0,
 ) {
     let cmd = new CommandApdu()
         .setProprietary()
         .setIns(gpIns.INIT_UPDATE)
         .setP1(keyVer)
-        .setP2(keyId)
-        .setData(hostChallenge)
+        .setP2(0)
         .setLe(0);
+
+    try {
+        cmd.setData(hostChallenge);
+    } catch (error: any) {
+        throw new Error(`initUpdate command error: ${error}`)
+    }
     return cmd;
 }
 
