@@ -6,15 +6,15 @@ import { ins } from './values';
 
 interface ISelectOptions {
     /** P1 (Selection method); Default: `name`
-     * `id_0` - Select MF, DF or EF
-     * `id_1` - Select child DF
-     * `id_2` - Select EF under the current DF
-     * `id_3` - Select parent DF of the current DF
-     * `name` - Select by DF name
-     * `path_0` - Select by path  from the MF
-     * `path_1` - Select by path from the current DF
-     * `do_0` - Select DO in the current template
-     * `do_1` - Select parent DO of the constructed DO setting the current template
+     * - `id_0` - Select MF, DF or EF
+     * - `id_1` - Select child DF
+     * - `id_2` - Select EF under the current DF
+     * - `id_3` - Select parent DF of the current DF
+     * - `name` - Select by DF name
+     * - `path_0` - Select by path  from the MF
+     * - `path_1` - Select by path from the current DF
+     * - `do_0` - Select DO in the current template
+     * - `do_1` - Select parent DO of the constructed DO setting the current template
      */
     selectBy?:
         | 'id_0'
@@ -27,20 +27,25 @@ interface ISelectOptions {
         | 'do_0'
         | 'do_1';
     /** P2 (File or DO occurrence); Default: `first`
-     * `first` - First or only occurrence
-     * `last` - Last occurrence
-     * `next` - Next occurrence
-     * `prev` - Previous occurrence
+     * - `first` - First or only occurrence
+     * - `last` - Last occurrence
+     * - `next` - Next occurrence
+     * - `prev` - Previous occurrence
      */
     occurence?: 'first' | 'last' | 'next' | 'prev';
     /** P2 (Response requirements); Default: `fci`
-     * `fci` - Return FCI template, optional use of FCI tag and length
-     * `cp` - Return CP template, mandatory use of CP tag and length
-     * `fmd` - Return FMD template, mandatory use of FMD tag and length; Return the tags belonging to the template set by the selection of a constructed DO as a tag list
-     * `le` - No response data if Le field absent, or proprietary if Le field present  */
+     * - `fci` - Return FCI template, optional use of FCI tag and length
+     * - `cp` - Return CP template, mandatory use of CP tag and length
+     * - `fmd` - Return FMD template, mandatory use of FMD tag and length; Return the tags belonging to the template set by the selection of a constructed DO as a tag list
+     * - `le` - No response data if Le field absent, or proprietary if Le field present  */
     response?: 'fci' | 'cp' | 'fmd' | 'le';
 }
 
+
+/** When completed, the command opens the logical channel (see 5.4.2) numbered in CLA (see 5.4.1), if not yet opened, and sets a current structure within that logical channel. Subsequent commands may implicitly refer to the current structure through that logical channel.
+ * @param data - Absent or file identifier or path or DF name or tag
+ * @param opts - additional command options encoded in P1 and P2
+*/
 export function select(
     data?: TBinData,
     opts: ISelectOptions = {},
@@ -144,8 +149,7 @@ export function getResponse(le: number): CommandApdu {
  * @param refNum - reference data number(value between 0 and 31)
  * @param dataToVerify - actual data for card to verify (password, pin etc...)
  * @param reset - (Default: `false`); if true, data must be empty; if `true`, the command shall set the verification status of the relevant reference data as "not verified"
- * @param refIsSpecific - (Default: `true`). If true, `refNum` indicates specific reference data (e.g. DF specific password or key)
-; otherwise it indicates global reference data (e.g. MF specific password or key) */
+ * @param refIsSpecific - (Default: `true`). If true, `refNum` indicates specific reference data (e.g. DF specific password or key); otherwise it indicates global reference data (e.g. MF specific password or key) */
 export function verifyRefData(
     refNum: number,
     dataToVerify: TBinData | null,
@@ -179,8 +183,7 @@ export function verifyRefData(
  * Set refecerce data (pins, passwords etc...)
  * @param refNum - reference data number(value between 0 and 31)
  * @param data - new data
- * @param refIsSpecific - (Default: `true`). If true, `refNum` indicates specific reference data (e.g. DF specific password or key)
-; otherwise it indicates global reference data (e.g. MF specific password or key) */
+ * @param refIsSpecific - (Default: `true`). If true, `refNum` indicates specific reference data (e.g. DF specific password or key); otherwise it indicates global reference data (e.g. MF specific password or key) */
 export function changeRefData(
     refNum: number,
     data: TBinData,

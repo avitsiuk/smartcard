@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import Logger from './logger';
 import { CardReader, Status } from './typesPcsclite';
 import { IDevice, TDeviceEventName } from './typesInternal';
 import { importBinData } from './utils';
@@ -14,6 +15,7 @@ export class Device implements IDevice {
     card: Card | null;
 
     constructor(reader: CardReader) {
+        Logger.trace(`Instantiating new device: "${reader.name}"`);
         this.reader = reader;
         this.name = reader.name;
         this.card = null;
@@ -41,17 +43,26 @@ export class Device implements IDevice {
         };
 
         const cardInserted = (reader: CardReader, status: Status) => {
+            Logger.trace(`Card inserted into "${this.name}"`);
             reader.connect({ share_mode: 2 }, (err, protocol) => {
                 if (err) {
                     this._eventEmitter.emit('error', err);
                 } else {
-                    this.card = new Card(
-                        this,
-                        status.atr
-                            ? importBinData(status.atr)
-                            : new Uint8Array(0),
-                        protocol,
-                    );
+                    try {
+                        this.card = new Card(
+                            this,
+                            status.atr
+                                ? importBinData(status.atr)
+                                : new Uint8Array(0),
+                            protocol,
+                        );
+                    } catch (error: any) {
+                        this._eventEmitter.emit(
+                            'error',
+                            new Error(`Card error: ${error.message}`),
+                        );
+                        return;
+                    }
                     this._eventEmitter.emit('card-inserted', {
                         device: this,
                         card: this.card,
@@ -61,6 +72,7 @@ export class Device implements IDevice {
         };
 
         const cardRemoved = (reader: CardReader) => {
+            Logger.trace(`Card removed from "${this.name}"`);
             const name = reader.name;
             reader.disconnect(reader.SCARD_LEAVE_CARD, (err) => {
                 if (err) {
@@ -76,6 +88,7 @@ export class Device implements IDevice {
         };
 
         reader.on('status', (status: Status) => {
+            Logger.trace(`Device status change. Status: ${status.state}. Device: "${this.name}"`);
             const changes = reader.state ^ status.state;
             if (changes) {
                 if (isCardRemoved(changes, reader, status)) {
@@ -93,6 +106,7 @@ export class Device implements IDevice {
         protocol: number,
         cb: (err: any, response: Uint8Array) => void,
     ) {
+        Logger.trace(`Transmitting ${data.byteLength} bytes to device "${this.name}"; res_len: ${res_len}; protocol: ${protocol}`);
         this.reader.transmit(
             Buffer.from(data),
             res_len,
