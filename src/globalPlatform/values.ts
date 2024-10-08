@@ -40,3 +40,6 @@ export enum ins {
     /** 0xF2 */
     GET_STATUS = 0xf2, // no iso variant
 }
+
+/** Hex: 0x2A864886FC6B */
+export const GP_OID_STR = '1.2.840.114283';
