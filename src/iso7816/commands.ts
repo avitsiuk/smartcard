@@ -52,7 +52,13 @@ export function select(
 ): CommandApdu {
     const cmd = new CommandApdu().setIns(ins.SELECT);
 
-    if (typeof data !== 'undefined') cmd.setData(data);
+    if (typeof data !== 'undefined') {
+        try {
+            cmd.setData(data);
+        } catch (error: any) {
+            throw new Error(`select command error: ${error}`)
+        }
+    }
 
     // P1
     let p1 = 0x04; // default, select by name
@@ -172,9 +178,16 @@ export function verifyRefData(
 
     let p2 = refNum;
     if (refIsSpecific) p2 |= 0x80;
+
     cmd.setP2(p2);
 
-    if (dataToVerify) cmd.setData(dataToVerify);
+    if (dataToVerify) {
+        try {
+            cmd.setData(dataToVerify);
+        } catch (error: any) {
+            throw new Error(`verifyRefData command error: ${error}`)
+        }
+    }
 
     return cmd;
 }
@@ -196,13 +209,26 @@ export function changeRefData(
     }
 
     // 00 - [verification data][new data]; 01 - [new data]
-    const cmd = new CommandApdu().setIns(ins.CHANGE_REF_DATA).setP1(0x01);
+    const cmd = new CommandApdu()
+        .setIns(ins.CHANGE_REF_DATA)
+        .setP1(0x01);
 
     let p2 = refNum;
-    if (refIsSpecific) p2 |= 0x80;
+
+    if (refIsSpecific) {
+        p2 |= 0x80;
+    }
+
     cmd.setP2(p2);
 
-    cmd.setData(data);
+    try {
+        cmd.setData(data);
+    } catch (error: any) {
+        throw new Error(`changeRefData command error: ${error}`)
+    }
+
+    return cmd;
+}
 
     return cmd;
 }
