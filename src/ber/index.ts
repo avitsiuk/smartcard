@@ -13,3 +13,5 @@ export { Tag } from './tag';
 export { IBerObjInfo } from './parser';
 
 export { BerObject, IBerObjConstructed, IBerObjPrimitive } from './berObject';
+
+export * as Asn1Utils from './asn1Utils';

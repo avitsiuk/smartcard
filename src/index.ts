@@ -1,3 +1,4 @@
+import Logger from './logger';
 import * as BER from './ber/index';
 import * as Utils from './utils';
 import statusDecode from './statusDecode';
@@ -35,6 +36,7 @@ import Device from './device';
 import PcscDevicesManager from './devices';
 
 export {
+    Logger,
     BER,
     Utils,
     statusDecode,
