@@ -21,15 +21,18 @@ const Iso7816 = {
 // GlobalPlatform
 import * as GPValues from './globalPlatform/values';
 import * as GPCommands from './globalPlatform/commands';
-import SCP02 from './globalPlatform/sesureSession/scp02';
-import SCP11 from './globalPlatform/sesureSession/scp11';
+import * as GPUtils from './globalPlatform/utils';
+// import SCP02 from './globalPlatform/sesureSession/scp02';
+// import SCP11 from './globalPlatform/sesureSession/scp11';
 const GP = {
     /** Common GlobalPlatform values */
     values: GPValues,
     /** GlobalPlatform-defined Commands */
     commands: GPCommands,
-    SCP02,
-    SCP11,
+    /** GlobalPlatform utility functions */
+    Utils: GPUtils,
+    // SCP02,
+    // SCP11,
 };
 
 import Device from './device';
