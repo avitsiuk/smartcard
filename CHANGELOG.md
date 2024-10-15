@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - BerObject path list caching. Now the list won't be rebuilt for every single search. Cache must be invalidated manually upon editing BerObject.
 - `BerObject.invalidatePathListCache()` method for manual cache invalidation.
 - Asn1 utility for OID decoding
+- GlobalPlatform utility for getting full card info
+
 ### Fixed
 
 - ICard.issueCommand() overload type
