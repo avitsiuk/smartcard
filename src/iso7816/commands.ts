@@ -230,5 +230,40 @@ export function changeRefData(
     return cmd;
 }
 
+/**
+ * Internal authenticate. The command prompts the card to generate authentication data using the challenge data sent by the interface device and a corresponding secret, like a key, stored in the card.
+ * @param data - Authentication-related data (e.g. challenge).
+ * @param algorithm - Default: `0`. A byte indicating the algorithm to use: either a cryptographic algorithm or a biometric algorithm (see ISO/IEC 7816-11). '00' means that no information is given.
+ * @param refDataQualifier - Default: 0. Qualifier, i.e. number of the reference data or number of the secret, Must be between 0 and 31.
+ * @param isSpecificQualifier - Default: `false`. If `false`, `dataQualifier` indicates global reference data (e.g. MF specific password or key). If `true`, `dataQualifier` indicates specific reference data (e.g. DF specific password or key).
+ */
+export function intAuth(
+    data: TBinData = new Uint8Array(0),
+    algorithm: number = 0,
+    refDataQualifier: number = 0,
+    isSpecificQualifier: boolean = false,
+) {
+    if (refDataQualifier < 0 || refDataQualifier > 31) {
+        throw new Error('intAuth command error: refDataQualifier must be in the range 0..31');
+    }
+    let p2 = (refDataQualifier & 0x1f);
+    if (isSpecificQualifier) {
+        p2 |= 0x80;
+    }
+
+    let cmd = new CommandApdu()
+        .setIns(ins.INT_AUTH)
+        .setP1(algorithm)
+        .setP2(p2);
+
+    try {
+        cmd.setData(data);
+    } catch (error: any) {
+        throw new Error(`intAuth command error: ${error}`)
+    }
+
+    return cmd;
+}
+
     return cmd;
 }
