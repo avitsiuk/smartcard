@@ -278,5 +278,43 @@ export function getChallenge(algorithm: number): CommandApdu {
     return cmd;
 }
 
+/**
+ * External (mutual) authenticate. The command conditionally updates the security status using the result (yes or no) or the computation by the card based on a challenge previously issued by the card (e.g. by a `GET_CHALLENGE` command), a key possibly secret stored in the card and authentication data transmitted by the interface device. In case of `EXTERNAL_AUTHENTICATE` command the response data field is empty.  
+ * `MUTUAL_AUTHENTICATE` uses the same functionality as `EXTERNAL` and `INTERNAL_AUTHENTICATE` commands. It is based upon a previous `GET_CHALLENGE` command and a secret key stored in the card. In case of `MUTUAL_AUTHENTICATE` command the response data field contains card's authentication-related data.
+ * @param data - Authentication-related data (e.g. challenge).
+ * @param algorithm - Default: `0`. A byte indicating the algorithm to use: either a cryptographic algorithm or a biometric algorithm (see ISO/IEC 7816-11). '00' means that no information is given.
+ * @param refDataQualifier - Default: 0. Qualifier, i.e. number of the reference data or number of the secret, Must be between 0 and 31.
+ * @param isSpecificQualifier - Default: `false`. If `false`, `dataQualifier` indicates global reference data (e.g. MF specific password or key). If `true`, `dataQualifier` indicates specific reference data (e.g. DF specific password or key).
+ */
+export function extMutAuth(
+    data: TBinData = new Uint8Array(0),
+    algorithm: number = 0,
+    refDataQualifier: number = 0,
+    isSpecificQualifier: boolean = false,
+) {
+    if (refDataQualifier < 0 || refDataQualifier > 31) {
+        throw new Error('intAuth command error: refDataQualifier must be in the range 0..31');
+    }
+
+    let p2 = (refDataQualifier & 0x1f);
+
+    if (isSpecificQualifier) {
+        p2 |= 0x80;
+    }
+
+    let cmd = new CommandApdu()
+        .setIns(ins.EXT_MUT_AUTH)
+        .setP1(algorithm)
+        .setP2(p2);
+
+    try {
+        cmd.setData(data);
+    } catch (error: any) {
+        throw new Error(`extMutAuth command error: ${error}`)
+    }
+
+    return cmd;
+}
+
     return cmd;
 }
