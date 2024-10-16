@@ -265,5 +265,18 @@ export function intAuth(
     return cmd;
 }
 
+/**
+ * The command requires the issuing of a challenge (e.g. a random number for a cryptographic authentication or a sentence to prompt for a biometric authentication using voiceprints) for use in a security-related procedure (e.g. EXTERNAL AUTHENTICATE command).
+ * @param algorithm - Default: `0`. A byte indicating the algorithm to use: either a cryptographic algorithm or a biometric algorithm (see ISO/IEC 7816-11). '00' means that no information is given.
+ */
+export function getChallenge(algorithm: number): CommandApdu {
+    let cmd = new CommandApdu()
+        .setIns(ins.GET_CHALLENGE)
+        .setP1(algorithm)
+        .setP2(0);
+
+    return cmd;
+}
+
     return cmd;
 }
