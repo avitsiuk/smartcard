@@ -316,5 +316,35 @@ export function extMutAuth(
     return cmd;
 }
 
+/** Retrievs the value field of a DO belonging to the current template. It may be the content of an EF supporting DOs
+ * @param p1 - See 11.4.1.1 of Iso7816-4(2014)
+ * @param p2 - See 11.4.1.1 of Iso7816-4(2014)
+*/
+export function getDataEven(p1: number, p2: number): CommandApdu {
+    let cmd = new CommandApdu()
+        .setIns(ins.GET_DATA_EVEN)
+        .setP1(p1)
+        .setP2(p2);
+
+        return cmd;
+}
+
+/** Retrievs the value field of one or several DOs according to the arguments of the command.
+ * @param p1 - See 11.4.1.2 of Iso7816-4(2014)
+ * @param p2 - See 11.4.1.2 of Iso7816-4(2014)
+ * @param data - Identical to `SELECT_DATA` data field. See 11.4.2.1 (Tables 86 and 87) of Iso7816-4(2014)
+*/
+export function getDataOdd(p1: number, p2: number, data: TBinData): CommandApdu {
+    let cmd = new CommandApdu()
+        .setIns(ins.GET_DATA_ODD)
+        .setP1(p1)
+        .setP2(p2);
+
+    try {
+        cmd.setData(data);
+    } catch (error: any) {
+        throw new Error(`getDataOdd command error: ${error}`)
+    }
+
     return cmd;
 }
