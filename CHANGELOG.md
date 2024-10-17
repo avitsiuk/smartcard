@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - added CHANGELOG.md to package files
 - added missing Iso7816 INS values
+- added `GET_DATA_EVEN`, `GET_DATA_ODD`, `INT_AUTH`, `EXT_MUT_AUTH`, `GET_CHALLENGE` Iso7816 commands
 - added missing GlobalPlatform INS values
 - additional ber parser check for better error description
 - BerObject path list caching. Now the list won't be rebuilt for every single search. Cache must be invalidated manually upon editing BerObject.
@@ -27,6 +28,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - ICard.issueCommand() overload type
 - ICard.issueCommand() unhandled error during submission
+
+### TODO
+
+- get following GP card data:
+  - "73" "Security domain management data";
+  - "c0" "Key Information Data";
+  - "e0" "Key Information Template";
 
 ## [0.8.1] - 2024-09-23
 
