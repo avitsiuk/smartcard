@@ -5,7 +5,7 @@ import { CardReader, PCSCLite } from './typesPcsclite';
 import { IDevicesManager, TDevicesManagerEventName } from './typesInternal';
 import Device from './device';
 
-class PcscDevicesManager implements IDevicesManager {
+export class PcscDevicesManager implements IDevicesManager {
     private _eventEmitter: EventEmitter;
     private pcsc: PCSCLite;
     private _devices: { [key: string]: Device };

@@ -23,7 +23,7 @@ function nullableLogFunctionCall(
     defLogFun(...args);
 }
 
-namespace Logger {
+export namespace Logger {
 
     /** Default fallback log functions */
     export namespace DefLogFun {

@@ -1,13 +1,13 @@
 import {
     importBinData,
     isBinData,
-    TBinData,
+    type TBinData,
     getMinWordNum,
     hexEncode,
 } from '../utils';
 import { serializeLength } from './berUtils';
 import Tag from './tag';
-import { IBerObjInfo, IBerObj, parseBer } from './parser';
+import { type IBerObjInfo, type IBerObj, parseBer } from './parser';
 
 export interface IBerObjPrimitive extends IBerObj {
     tag: Tag;

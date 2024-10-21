@@ -1,7 +1,7 @@
 import CommandApdu from '../commandApdu';
 import { TBinData } from '../utils';
-import { ins as gpIns } from './values';
-import { ins as isoIns } from '../iso7816/values';
+import { EIns as gpIns } from './values';
+import { EIns as isoIns } from '../iso7816/values';
 
 /** Used to retrieve either a single BER-TLV-coded data object, which may be constructed, or a set of BER-TLV-coded data objects.
  * @param highTagByte - high order tag byte (or `0x00`, if tag is 1 byte long)
@@ -76,3 +76,60 @@ export function extAuth(hostCryptogram: TBinData, secLvl: 0 | 1 | 3 | 16 | 17 | 
 
     return cmd;
 }
+
+// /**
+//  * Internal authenticate
+//  * @param key - ephemeral OCE key agreement public key
+//  * @param secLvl - (Default:`0x34`) Defines the level of security for all secure messaging commands following this INTERNAL_AUTHENTICATE command (it does not apply to this command) and within this Secure Channel
+//  * Possible `secLvl` values:
+//  * `0x34` - C-MAC and R-MAC only
+//  * `0x3C` - C-MAC, C-DECRYPTION, R-MAC, R-ENCRYPTION
+//  * @param includeId - (Default: `false`) If true, a passed id can be included
+//  * @param id - id to include if `includeId` parameter has been set to `true`
+//  */
+// export function intAuth(
+//     key: TBinData,
+//     secLvl: 0x34 | 0x3c = 0x34,
+//     includeId: boolean = false,
+//     id: TBinData = new Uint8Array(0),
+// ) {
+//     let _key: Uint8Array;
+//     try {
+//         _key = importBinData(key);
+//     } catch (error: any) {
+//         throw new Error(`Key error: ${error.message}`);
+//     }
+
+//     let berObjInfo: IBerObjInfo = {
+//         tag: Tag.root,
+//         value: [
+//             {
+//                 tag: 'A6',
+//                 value: [
+//                     { tag: '90', value: [0x11, includeId ? 0x04 : 0x00] },
+//                     { tag: '95', value: [secLvl] },
+//                     { tag: '80', value: [0x88] },
+//                     { tag: '81', value: [Math.floor(_key.byteLength / 2)] },
+//                 ],
+//             },
+//             { tag: '5F49', value: _key },
+//         ],
+//     };
+
+//     if (includeId) {
+//         ((berObjInfo.value as IBerObjInfo[])[0].value as IBerObjInfo[]).push({
+//             tag: '84',
+//             value: id,
+//         });
+//     }
+
+//     let cmd = new CommandApdu()
+//         .setProprietary()
+//         .setType(4)
+//         .setSecMgsType(0)
+//         .setIns(isoIns.INT_AUTH)
+//         .setP1(0x00) // key version
+//         .setP2(0x00) // key identifier
+//         .setData(BerObject.create(berObjInfo).serialize());
+//     return cmd;
+// }

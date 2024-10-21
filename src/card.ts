@@ -1,15 +1,15 @@
 import { EventEmitter } from 'events';
 import Logger from './logger';
-import { hexEncode, IAtrInfo, importBinData, TBinData, decodeAtr } from './utils';
-import { CommandApdu } from './commandApdu';
+import { hexEncode, type IAtrInfo, importBinData, type TBinData, decodeAtr } from './utils';
+import CommandApdu from './commandApdu';
 import ResponseApdu from './responseApdu';
-import { ICard, IDevice, TCardEventName } from './typesInternal';
-import * as Iso7816Commands from './iso7816/commands';
+import { type ICard, type IDevice, type TCardEventName } from './typesInternal';
+import { getResponse as isoGetResponse } from './iso7816/commands';
 
 /** Response APDU max size(256 for data + 2 for status) */
 const maxTrResLen = 258;
 
-class Card implements ICard {
+export class Card implements ICard {
     private _isBusy: boolean;
     private _eventEmitter = new EventEmitter();
     private _device: IDevice;
@@ -262,7 +262,7 @@ class Card implements ICard {
                     switch (true) {
                         case response.hasMoreBytesAvailable:
                             Logger.trace('Getting response automatically...');
-                            cmdToResend = Iso7816Commands.getResponse(
+                            cmdToResend = isoGetResponse(
                                 response.availableResponseBytes,
                             );
                             doCommandTransform = false;

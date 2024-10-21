@@ -1,5 +1,5 @@
 /** List of Ins bytes as defined in Iso7816-4(2014) specifications */
-export enum ins {
+export enum EIns {
     /** 0x04; see Iso7816-9 */
     DEACTIVATE_FILE = 0x04,
     /** 0x06; see 11.3.10 of Iso7816-4(2014) */

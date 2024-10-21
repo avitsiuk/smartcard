@@ -1,4 +1,4 @@
-import { hexEncode, importBinData, TBinData } from "../utils";
+import { importBinData, type TBinData } from "../utils";
 
 export function decodeOID(binData: TBinData): number[] {
     let inData: Uint8Array;

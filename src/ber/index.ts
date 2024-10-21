@@ -3,15 +3,15 @@ export {
     MAX_LEN_SAFE_NUMBER,
     MAX_TAG_BYTE_LENGTH,
     MAX_TAG_SAFE_NUMBER,
-    TTlvTagClassNumber,
-    TTlvTagClassName,
-    ITagInfo,
+    type TTlvTagClassNumber,
+    type TTlvTagClassName,
+    type ITagInfo,
 } from './berUtils';
 
 export { Tag } from './tag';
 
-export { IBerObjInfo } from './parser';
+export { type IBerObjInfo } from './parser';
 
-export { BerObject, IBerObjConstructed, IBerObjPrimitive } from './berObject';
+export { BerObject, type IBerObjConstructed, type IBerObjPrimitive } from './berObject';
 
 export * as Asn1Utils from './asn1Utils';

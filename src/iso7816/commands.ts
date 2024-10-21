@@ -1,10 +1,8 @@
 import { TBinData } from '../utils';
 import CommandApdu from '../commandApdu';
-import { ins } from './values';
+import { EIns as isoIns } from './values';
 
-// SELECT
-
-interface ISelectOptions {
+export interface ISelectOptions {
     /** P1 (Selection method); Default: `name`
      * - `id_0` - Select MF, DF or EF
      * - `id_1` - Select child DF
@@ -50,7 +48,7 @@ export function select(
     data?: TBinData,
     opts: ISelectOptions = {},
 ): CommandApdu {
-    const cmd = new CommandApdu().setIns(ins.SELECT);
+    const cmd = new CommandApdu().setIns(isoIns.SELECT);
 
     if (typeof data !== 'undefined') {
         try {
@@ -146,7 +144,7 @@ export function getResponse(le: number): CommandApdu {
     if (le < 0 || le > 255) {
         throw new Error('Wrong le value');
     }
-    const cmd = new CommandApdu().setIns(ins.GET_RESPONSE).setLe(le);
+    const cmd = new CommandApdu().setIns(isoIns.GET_RESPONSE).setLe(le);
     return cmd;
 }
 
@@ -172,7 +170,7 @@ export function verifyRefData(
         throw new Error(`With reset set to "true", data must be null`);
     }
 
-    const cmd = new CommandApdu().setIns(ins.VERIFY_REF_DATA);
+    const cmd = new CommandApdu().setIns(isoIns.VERIFY_REF_DATA);
 
     if (reset) cmd.setP1(0xff);
 
@@ -210,7 +208,7 @@ export function changeRefData(
 
     // 00 - [verification data][new data]; 01 - [new data]
     const cmd = new CommandApdu()
-        .setIns(ins.CHANGE_REF_DATA)
+        .setIns(isoIns.CHANGE_REF_DATA)
         .setP1(0x01);
 
     let p2 = refNum;
@@ -252,7 +250,7 @@ export function intAuth(
     }
 
     let cmd = new CommandApdu()
-        .setIns(ins.INT_AUTH)
+        .setIns(isoIns.INT_AUTH)
         .setP1(algorithm)
         .setP2(p2);
 
@@ -271,7 +269,7 @@ export function intAuth(
  */
 export function getChallenge(algorithm: number): CommandApdu {
     let cmd = new CommandApdu()
-        .setIns(ins.GET_CHALLENGE)
+        .setIns(isoIns.GET_CHALLENGE)
         .setP1(algorithm)
         .setP2(0);
 
@@ -303,7 +301,7 @@ export function extMutAuth(
     }
 
     let cmd = new CommandApdu()
-        .setIns(ins.EXT_MUT_AUTH)
+        .setIns(isoIns.EXT_MUT_AUTH)
         .setP1(algorithm)
         .setP2(p2);
 
@@ -322,7 +320,7 @@ export function extMutAuth(
 */
 export function getDataEven(p1: number, p2: number): CommandApdu {
     let cmd = new CommandApdu()
-        .setIns(ins.GET_DATA_EVEN)
+        .setIns(isoIns.GET_DATA_EVEN)
         .setP1(p1)
         .setP2(p2);
 
@@ -336,7 +334,7 @@ export function getDataEven(p1: number, p2: number): CommandApdu {
 */
 export function getDataOdd(p1: number, p2: number, data: TBinData): CommandApdu {
     let cmd = new CommandApdu()
-        .setIns(ins.GET_DATA_ODD)
+        .setIns(isoIns.GET_DATA_ODD)
         .setP1(p1)
         .setP2(p2);
 

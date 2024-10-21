@@ -1,5 +1,5 @@
-import { importBinData, TBinData } from '../utils';
-import { ITagInfo, parseLength } from './berUtils';
+import { importBinData, type TBinData } from '../utils';
+import { type ITagInfo, parseLength } from './berUtils';
 import { Tag } from './tag';
 
 export interface IBerObjInfo {

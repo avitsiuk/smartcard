@@ -1,4 +1,4 @@
-import { TBinData, importBinData, hexEncode } from './utils';
+import { type TBinData, importBinData, hexEncode } from './utils';
 /*
 
 CASE   CMD-DATA(LC)   RSP-DATA(LE)

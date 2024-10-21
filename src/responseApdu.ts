@@ -1,4 +1,4 @@
-import { TBinData, importBinData, hexEncode } from './utils';
+import { type TBinData, importBinData, hexEncode } from './utils';
 import statusDecode from './statusDecode';
 
 export class ResponseApdu {

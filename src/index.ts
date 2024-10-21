@@ -1,53 +1,24 @@
-import Logger from './logger';
-import * as BER from './ber/index';
-import * as Utils from './utils';
-import statusDecode from './statusDecode';
-import ResponseApdu from './responseApdu';
-import CommandApdu from './commandApdu';
-import Card from './card';
+export { Logger } from './logger';
+export * as BER from './ber/index';
+export * as Utils from './utils';
+export { statusDecode } from './statusDecode';
+export { ResponseApdu } from './responseApdu';
+export { CommandApdu } from './commandApdu';
+export { Card } from './card';
 
 // Iso7816
-import * as Iso7816Values from './iso7816/values';
-import * as Iso7816Commands from './iso7816/commands';
-
-/** Everything Iso7816 */
-const Iso7816 = {
-    /** Common Iso7816 values */
-    values: Iso7816Values,
-    /** Iso7816-defined Commands */
-    commands: Iso7816Commands,
-};
+/** Common Iso7816 values */
+export * as Iso7816Values from './iso7816/values';
+/** Iso7816 Commands */
+export * as Iso7816Commands from './iso7816/commands';
 
 // GlobalPlatform
-import * as GPValues from './globalPlatform/values';
-import * as GPCommands from './globalPlatform/commands';
-import * as GPUtils from './globalPlatform/utils';
-// import SCP02 from './globalPlatform/sesureSession/scp02';
-// import SCP11 from './globalPlatform/sesureSession/scp11';
-const GP = {
-    /** Common GlobalPlatform values */
-    values: GPValues,
-    /** GlobalPlatform-defined Commands */
-    commands: GPCommands,
-    /** GlobalPlatform utility functions */
-    Utils: GPUtils,
-    // SCP02,
-    // SCP11,
-};
+/** Common GlobalPlatform values */
+export * as GPValues from './globalPlatform/values';
+/** GlobalPlatform Commands */
+export * as GPCommands from './globalPlatform/commands';
+/** GlobalPlatform utility functions */
+export * as GPUtils from './globalPlatform/utils';
 
-import Device from './device';
-import PcscDevicesManager from './devices';
-
-export {
-    Logger,
-    BER,
-    Utils,
-    statusDecode,
-    ResponseApdu,
-    CommandApdu,
-    Iso7816,
-    GP,
-    Card,
-    Device,
-    PcscDevicesManager,
-};
+export { Device } from './device';
+export { PcscDevicesManager } from './devices';

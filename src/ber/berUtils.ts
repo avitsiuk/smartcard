@@ -1,4 +1,4 @@
-import { TBinData, importBinData, getMinWordNum } from '../utils';
+import { type TBinData, importBinData, getMinWordNum } from '../utils';
 
 export const MAX_TAG_BYTE_LENGTH = 4;
 export const MAX_TAG_SAFE_NUMBER = Math.max(

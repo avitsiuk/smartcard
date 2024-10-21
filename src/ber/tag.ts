@@ -1,14 +1,14 @@
-import { TBinData, hexEncode, importBinData } from '../utils';
+import { type TBinData, hexEncode, importBinData } from '../utils';
 
 import {
     MAX_TAG_BYTE_LENGTH,
     MAX_TAG_SAFE_NUMBER,
-    TTlvTagClassName,
-    TTlvTagClassNumber,
+    type TTlvTagClassName,
+    type TTlvTagClassNumber,
     tlvClassName,
     tlvClassNumber,
-    ITagInfo,
-    TParseTagResult,
+    type ITagInfo,
+    type TParseTagResult,
     isTagInfo,
     parseTag,
     serializeTag,
