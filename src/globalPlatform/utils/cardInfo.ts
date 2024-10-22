@@ -1,10 +1,10 @@
-import Logger from '../logger';
-import { ICard } from "../typesInternal";
-import { BerObject, Asn1Utils } from '../ber';
-import * as IsoCmd from '../iso7816/commands';
-import * as GpCmd from './commands';
-import * as GPValues from './values';
-import { hexDecode, hexEncode } from '../utils';
+import Logger from '../../logger';
+import { ICard } from "../../typesInternal";
+import { BerObject, Asn1Utils } from '../../ber';
+import { select as isoSelect } from '../../iso7816/commands';
+import { getData as gpGetData } from './../commands';
+import { GP_OID_STR } from './../values';
+import { hexDecode, hexEncode } from '../../utils';
 
 type TCPLCKey = 'icFabricator' | 'icType' | 'osProviderID' | 'osReleaseDate' | 'osReleaseLevel' | 'icFabricationDate'
     | 'icSerialNumber' | 'icBatchIdentifier' | 'icModuleFabricator' | 'icModulePackagingDate' | 'iccManufacturer'
@@ -24,12 +24,9 @@ const CPLC_TOTAL_LEN: number = CPLC_FIELDS.reduce((acc, val) => {
 
 type TCPLCData = { [key in TCPLCKey]: string }
 
-type TCardRecognitionData = {
-    /** Global platform version */
-    gpVersion?: string;
-}
 
-interface IGPCardInfo {
+
+export interface IGPCardInfo {
     /** Issuer Security Domain */
     isd?: string;
     gpVersion?: string;
@@ -60,27 +57,27 @@ export function gpCardInfo(card: ICard): Promise<IGPCardInfo>
 /** Gets available card data and calls provided callback or resolves upon completion */
 export function gpCardInfo(
     card: ICard,
-    callback?: (err: any, info: IGPCardInfo) => void,
+    callback?: (error: any, info: IGPCardInfo) => void,
 ): void | Promise<IGPCardInfo> {
     if (typeof callback === 'undefined') {
         return new Promise((resolve, reject) => {
-            const callback = (err: any, info: IGPCardInfo) => {
-                if (typeof err !== 'undefined') {
-                    return reject(err);
+            const callback = (error: any, info: IGPCardInfo) => {
+                if (typeof error !== 'undefined') {
+                    return reject(error);
                 }
                 return resolve(info);
             };
             try {
                 gpCardInfoInternal(card, callback);
             } catch (error: any) {
-                return reject(new Error(`Error getting GlobalPlatform card info: ${error.message}`));
+                return reject(error);
             }
         });
     } else {
         try {
             gpCardInfoInternal(card, callback);
         } catch (error: any) {
-            callback(new Error(`Error getting GlobalPlatform card info: ${error.message}`), {});
+            callback(error, {});
         }
     }
 }
@@ -89,7 +86,7 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
     Logger.trace('Getting full GP card info...');
     const cardInfoResult: IGPCardInfo = {};
     Logger.trace('Selecting default applet...');
-    card.issueCommand(IsoCmd.select())
+    card.issueCommand(isoSelect())
         .then((defaultSelectResponse) => {
             // parsing response to default select and getting ISD AID
             if (!defaultSelectResponse.isOk || defaultSelectResponse.dataLength < 1) {
@@ -132,11 +129,11 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
         .then(() => {
             Logger.trace('Reading card recognition data...');
             return new Promise<void>((resolve) => {
-                card.issueCommand(GpCmd.getData(0x00, 0x66))
+                card.issueCommand(gpGetData(0x00, 0x66))
                     .then((getDataResponse) => {
                         if (!getDataResponse.isOk || getDataResponse.dataLength < 1) {
                             const errMsg = `Error response to GET_DATA (tag 0x66): ${getDataResponse.toString()}(${getDataResponse.meaning})`;
-                            console.log(errMsg);
+                            Logger.debug(errMsg);
                             return resolve();
                         }
 
@@ -145,7 +142,7 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
                             responseBer = BerObject.parse(getDataResponse.data);
                         } catch (error: any) {
                             const errMsg = `Error parsing GET_DATA response (tag 0x66): ${error.message}; Data:[${hexEncode(getDataResponse.data)}]`;
-                            console.log(errMsg);
+                            Logger.debug(errMsg);
                             return resolve();
                         }
 
@@ -157,7 +154,8 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
                         const cardRecData = responseBer.search('/66/73');
 
                         if (cardRecData.length !== 1) {
-                            const errMsg = 'Tag /66/73 not found'
+                            const errMsg = 'Unexpected data';
+                            Logger.warn(errMsg);
                             return resolve();
                         }
 
@@ -170,7 +168,7 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
                             }
 
                             if (!cardRecDataElem.isConstructed() || cardRecDataElem.value.length < 1) {
-                                // console.log(`Unexpected structure of tag "${cardRecDataElem.tag.hex}"`)
+                                Logger.warn(`Unexpected structure of tag "${cardRecDataElem.tag.hex}"`);
                                 return;
                             }
 
@@ -185,7 +183,7 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
                             }, true)
 
                             if (!isInternalValueValid) {
-                                // console.log(`Unexpected structure of tag "${cardRecDataTag.tag.hex}"`)
+                                Logger.warn(`Unexpected structure of tag "${cardRecDataElem.tag.hex}"`);
                                 return;
                             }
 
@@ -196,7 +194,7 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
                             try {
                                 switch (cardRecDataElem.tag.hex) {
                                     case '60': // 1.2.840.114283.2.<gpVersion>
-                                    oidStrPrefix = `${GPValues.GP_OID_STR}.2.`;
+                                    oidStrPrefix = `${GP_OID_STR}.2.`;
                                         decodedOid = Asn1Utils.decodeOID(cardRecDataElem.value[0].value as Uint8Array);
                                         oidStr = decodedOid.join('.');
                                         Logger.debug(`GP version OID: [${oidStr}]`);
@@ -208,7 +206,7 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
                                         break;
                                     case '64': // 1.2.840.114283.4.<scpVersion>.<i>
                                         // Secure Channel Protocol and implementation options. 2 possible formats: multiple '64' or miltiple internal '06'
-                                        oidStrPrefix = `${GPValues.GP_OID_STR}.4.`;
+                                        oidStrPrefix = `${GP_OID_STR}.4.`;
                                         cardRecDataElem.value.forEach((oid) => {
                                             const scpOid = Asn1Utils.decodeOID(oid.value as Uint8Array);
                                             const scpOidStr = scpOid.join('.');
@@ -250,7 +248,7 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
                                 }
                             } catch (error: any) {
                                 const errMsg = `Error reading tag "${cardRecDataElem.tag.hex}": ${error.message}`;
-                                console.log(errMsg);
+                                Logger.debug(errMsg);
                                 return;
                             }
                         })
@@ -258,8 +256,8 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
                         return resolve();
                     })
                     .catch((error) => {
-                        const errmsg = `Error getting card data (tag 0x66): ${error.message}`;
-                        Logger.error(errmsg);
+                        const errMsg = `Error getting card data (tag 0x66): ${error.message}`;
+                        Logger.debug(errMsg);
                         return resolve();
                     })
             })
@@ -267,14 +265,14 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
         .then(() => {
             Logger.trace('Reading IIN...');
             return new Promise<void>((resolve, reject) => {
-                card.issueCommand(GpCmd.getData(0x00, 0x42))
+                card.issueCommand(gpGetData(0x00, 0x42))
                     .then((getDataResponse) => {
                         if (hexEncode(getDataResponse.status).toLowerCase() === '6a88') {
                             return resolve();
                         }
                         if (!getDataResponse.isOk || getDataResponse.dataLength < 1) {
                             const errMsg = `Error response to GET_DATA (tag 0x42): ${getDataResponse.toString()}(${getDataResponse.meaning})`;
-                            console.log(errMsg);
+                            Logger.debug(errMsg);
                             return resolve();
                         }
 
@@ -283,7 +281,7 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
                             responseBer = BerObject.parse(getDataResponse.data);
                         } catch (error: any) {
                             const errMsg = `Error parsing response to GET_DATA (tag 0x42): ${error.message}; Data:[${hexEncode(getDataResponse.data)}]`;
-                            console.log(errMsg);
+                            Logger.warn(errMsg);
                             return resolve();
                         }
 
@@ -294,6 +292,7 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
                         const iinList = responseBer.search('/42');
 
                         if (iinList.length !== 1) {
+                            Logger.warn(`Unexpected structure of data`);
                             return resolve();
                         }
 
@@ -311,14 +310,14 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
         .then(() => {
             Logger.trace('Reading CIN...');
             return new Promise<void>((resolve, reject) => {
-                card.issueCommand(GpCmd.getData(0x00, 0x45))
+                card.issueCommand(gpGetData(0x00, 0x45))
                     .then((getDataResponse) => {
                         if (hexEncode(getDataResponse.status).toLowerCase() === '6a88') {
                             return resolve();
                         }
                         if (!getDataResponse.isOk || getDataResponse.dataLength < 1) {
                             const errMsg = `Error response to GET_DATA (tag 0x45): ${getDataResponse.toString()}(${getDataResponse.meaning})`;
-                            console.log(errMsg);
+                            Logger.debug(errMsg);
                             return resolve();
                         }
 
@@ -355,7 +354,7 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
         .then(() => {
             Logger.trace('Reading Card Production Life Cycle (CPLC) data...');
             return new Promise<void>((resolve) => {
-                card.issueCommand(GpCmd.getData(0x9F, 0x7F))
+                card.issueCommand(gpGetData(0x9F, 0x7F))
                     .then((getDataResponse) => {
                         if (hexEncode(getDataResponse.status).toLowerCase() === '6a88') {
                             return resolve();
@@ -382,7 +381,7 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
                         const cplcList = responseBer.search('/9F7F');
 
                         if (cplcList.length !== 1) {
-                            console.log('no tag')
+                            console.log('/9F7F')
                             return resolve();
                         }
 
@@ -417,12 +416,10 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
             });
         })
         .then(() => {
-            // console.log('internal then final');
             callback(undefined, cardInfoResult);
             return Promise.resolve();
         })
         .catch((error: any) => {
-            // console.log('internal catch');
             callback(error, cardInfoResult)
             return;
         })
