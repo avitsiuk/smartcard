@@ -22,19 +22,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - BerObject path list caching. Now the list won't be rebuilt for every single search. Cache must be invalidated manually upon editing BerObject.
 - `BerObject.invalidatePathListCache()` method for manual cache invalidation.
 - Asn1 utility for OID decoding
-- GlobalPlatform utility for getting full card info
+- GlobalPlatform enums for privileges, key types, key usages, key access and card/sd/app lifecycle states
+- GlobalPlatform utility for getting card info
+- GlobalPlatform utility for getting card capabilities
 
 ### Fixed
 
 - ICard.issueCommand() overload type
 - ICard.issueCommand() unhandled error during submission
-
-### TODO
-
-- get following GP card data:
-  - "73" "Security domain management data";
-  - "c0" "Key Information Data";
-  - "e0" "Key Information Template";
 
 ## [0.8.1] - 2024-09-23
 
