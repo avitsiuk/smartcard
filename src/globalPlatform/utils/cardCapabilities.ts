@@ -19,7 +19,7 @@ export interface IGPCardCapabilities {
                 [key in TSCP03KeyType]: boolean;
             };
             /** Supported TLS cipher suites for SCP81 (hex string) (tag `A0/83`). Defined in [RFC 4279], [RFC 4785], and [RFC 5487]. Limited to cipher suites actually referenced in [Amd B]. Each cipher suite number is itself a 2-byte data.*/
-            scp81Tls?: string;
+            scp81Tls?: Uint8Array;
             /** Maximum length of Pre Shared Key in bytes (for SCP81 only) (tag `A0/84`) */
             scp81MaxPSKLen?: number;
         };
@@ -108,11 +108,11 @@ function gpCardCapabilitiesInternal(card: ICard, callback: (err: any, capabiliti
                             try {
                                 switch (cardCapDataElem.tag.hex.toLowerCase()) {
                                     case 'a0': //SCP info
-                                        let scpType: string | null = null;
+                                        let scpType: string | undefined;
                                         let scpOptions: number[] = [];
                                         let scp03Keys: {[key in TSCP03KeyType]: boolean} | undefined;
-                                        let scp81Tls: string | null = null;
-                                        let scp81MaxPSKLen: number | null = null;
+                                        let scp81Tls: Uint8Array = new Uint8Array(0);
+                                        let scp81MaxPSKLen: number | undefined;
                                         (cardCapDataElem.value as BerObject[]).forEach((scpInfoElem) => {
                                             switch (scpInfoElem.tag.hex) {
                                                 case '80': // SCP type, 1 byte
@@ -134,7 +134,7 @@ function gpCardCapabilitiesInternal(card: ICard, callback: (err: any, capabiliti
                                                     }
                                                     break;
                                                 case '83': // SCP81 supported TLS cipher suites, var len
-                                                    scp81Tls = hexEncode(scpInfoElem.value as Uint8Array);
+                                                    scp81Tls = scpInfoElem.value as Uint8Array;
                                                     break;
                                                 case '84': // SCP81 max pre shared key length in bytes, 1 byte
                                                     if ((scpInfoElem.value as Uint8Array).byteLength === 1) {
@@ -145,7 +145,7 @@ function gpCardCapabilitiesInternal(card: ICard, callback: (err: any, capabiliti
                                                     break;
                                             }
                                         })
-                                        if (scpType && scpOptions.length > 0) {
+                                        if (typeof scpType === 'string' && scpType.length > 0 && scpOptions.length > 0) {
                                             if (typeof cardCapsResult.supportedScpTypes === 'undefined')
                                                 cardCapsResult.supportedScpTypes = {};
 
@@ -154,7 +154,7 @@ function gpCardCapabilitiesInternal(card: ICard, callback: (err: any, capabiliti
                                             if (typeof scp03Keys !== 'undefined')
                                                 cardCapsResult.supportedScpTypes[scpType].scp03Keys = scp03Keys;
 
-                                            if (typeof scp81Tls === 'string')
+                                            if (scp81Tls.byteLength > 0)
                                                 cardCapsResult.supportedScpTypes[scpType].scp81Tls = scp81Tls;
 
                                             if (typeof scp81MaxPSKLen === 'number')
