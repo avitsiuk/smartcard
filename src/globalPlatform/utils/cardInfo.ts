@@ -159,6 +159,12 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
                             return resolve();
                         }
 
+                        if (responseBer.search('/66/73/06').length !== 1) {
+                            const errMsg = 'Missing mandatory globalPlatform OID tag (73/06).'
+                            Logger.warn(errMsg);
+                            return resolve();
+                        }
+
                         (cardRecData[0].value as BerObject[]).forEach((cardRecDataElem) => {
                             // console.log(`reading tag "${cardRecDataTag.tag.hex}"`);
                             if (cardRecDataElem.tag.hex === '06') { // 1.2.840.114283.1
