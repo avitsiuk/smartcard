@@ -65,6 +65,10 @@ export namespace Logger {
         TRACE,
     };
 
+    export function isAtLeastLevel(logLvl: ELogLevel): boolean {
+        return currLogLevel >= logLvl
+    }
+
     /** Example return: `2024-08-25T13:16:54.158Z` */
     export function utcDateStr(): string {
         return new Date().toISOString();
