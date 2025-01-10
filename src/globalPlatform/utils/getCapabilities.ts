@@ -3,70 +3,149 @@ import { ICard } from "../../typesInternal";
 import { BerObject } from '../../ber';
 import { select as isoSelect } from '../../iso7816/commands';
 import { getData as gpGetData } from './../commands';
-import { hexEncode } from '../../utils';
+import { hexEncode, type TBinData, importBinData } from '../../utils';
+import { EPrivileges } from '../values'
 
-type TSCPType = '02' | '03' | '80' | '81';
 type TSCP03KeyType = 'AES-128' | 'AES-192' | 'AES-256';
 
-export interface IGPCardCapabilities {
-    /** Info about supported SCP protocol types (tag `A0`). Every `A0` tag will have own entry in `supportedScpTypes`*/
+type TPrivilegeEncodingRules = {
+    [key in keyof typeof EPrivileges]: {
+        /** Byte index in privileges byte array. */
+        0 : number,
+        /** Bitmask to apply to byte */
+        1: number,
+        /** Expected result after applying bitmask */
+        2: number,
+    }
+}
+// ssd: ff fe c0    1111-1111 1111-1110 1100-0000
+// app: 1e 86 00    0001-1110 1000-0110 0000-0000
+const privEncRules: TPrivilegeEncodingRules = {
+    // first byte
+    SecurityDomain:            [0,0x80,0x80], // 1-------
+    DAPVerification:           [0,0xc1,0xc0], // 11-----0
+    DelegatedManagement:       [0,0xa0,0xa0], // 1-1-----
+    CardLock:                  [0,0x10,0x10], // ---1----
+    CardTerminate:             [0,0x08,0x08], // ----1---
+    CardReset:                 [0,0x04,0x04], // -----1--
+    CVMManagement:             [0,0x02,0x02], // ------1-
+    MandatedDAPVerification:   [0,0xc1,0xc1], // 11-----1
+ // second byte
+    TrustedPath:               [1,0x80,0x80], // 1-------
+    AuthorizedManagement:      [1,0x40,0x40], // -1------
+    TokenManagement:           [1,0x20,0x20], // --1-----
+    GlobalDelete:              [1,0x10,0x10], // ---1----
+    GlobalLock:                [1,0x08,0x08], // ----1---
+    GlobalRegistry:            [1,0x04,0x04], // -----1--
+    FinalApplication:          [1,0x02,0x02], // ------1-
+    GlobalService:             [1,0x01,0x01], // -------1
+ // third byte
+    ReceiptGeneration:         [2,0x80,0x80], // 1-------
+    CipheredLoadFileDataBlock: [2,0x40,0x40], // -1------
+    ContactlessActivation:     [2,0x20,0x40], // --1-----
+    ContactlessSelfActivation: [2,0x10,0x40], // ---1----
+}
+
+type TPrivilegesList = {
+    [key in keyof typeof EPrivileges]: boolean
+}
+
+export interface IGPCapabilities {
+    /** `A0` tag(s). Info about supported SCP protocol types. At least one occurrence of tag `A0` shall be present. Every `A0` occurence will have its own entry in `supportedScpTypes` property */
     supportedScpTypes?: {
         [key: string]: {
-            /** List of supported options for that protocol (e.g. 0x15(dec 21) or  0x55(dec 85) for SCP02) (tag `A0/81`) */
+            /** `A0/81` tag. List of supported options for protocol type (e.g. 0x15(dec 21) or  0x55(dec 85) for SCP02) */
             options: number[];
-            /** Supported keys for SCP03  (tag `A0/82`) */
+            /** `A0/82` tag. For SCP03. Supported keys */
             scp03Keys?: {
                 [key in TSCP03KeyType]: boolean;
             };
-            /** Supported TLS cipher suites for SCP81 (hex string) (tag `A0/83`). Defined in [RFC 4279], [RFC 4785], and [RFC 5487]. Limited to cipher suites actually referenced in [Amd B]. Each cipher suite number is itself a 2-byte data.*/
+            /** `A0/83` tag. For SCP81. Supported TLS cipher suites for SCP81. Defined in [RFC 4279], [RFC 4785], and [RFC 5487]. Limited to cipher suites actually referenced in [Amd B]. Each cipher suite number is itself a 2-byte data. */
             scp81Tls?: Uint8Array;
-            /** Maximum length of Pre Shared Key in bytes (for SCP81 only) (tag `A0/84`) */
+            /** `A0/84` tag. For SCP81. Maximum length of Pre Shared Key in bytes */
             scp81MaxPSKLen?: number;
         };
     };
+    /** `81` tag. Present if the card supports Supplementary Security Domains. Bitmap of privileges that may be assigned to Supplementary Security Domains on card. */
+    ssdPrivileges?: TPrivilegesList;
+    /** `82` tag. Shall be present. Bitmap of privileges that may be assigned to Applications on card */
+    appPrivileges?: TPrivilegesList;
 }
 
-/** Gets available card data and calls provided callback upon completion */
-export function gpCardCapabilities(card: ICard, callback: (err: any, capabilities: IGPCardCapabilities) => void): void
-/** Gets available card data and resolves upon completion */
-export function gpCardCapabilities(card: ICard): Promise<IGPCardCapabilities>
-/** Gets available card data and calls provided callback or resolves upon completion */
-export function gpCardCapabilities(
+function decodePrivileges(pByteArray: Uint8Array): TPrivilegesList {
+    if (pByteArray.byteLength != 3) {
+        throw new Error(`Unexpected privileges byte array length. Expected: 3 bytes, received: ${pByteArray} bytes.`)
+    }
+    let result: any = {};
+    // console.log(privEncRules["0"]);
+    for (const pName in privEncRules) {
+        const pRules = privEncRules[pName];
+        result[pName] = (pByteArray[pRules[0]] & pRules[1]) === pRules[2];
+    }
+    console.log(result);
+    return result;
+}
+
+/** Gets available GlobalPlatform capabilities from a default applet and calls provided callback upon completion. */
+export function getCapabilities(card: ICard, callback: (err: any, info: IGPCapabilities) => void): void
+/** Gets available GlobalPlatform capabilities from a default applet and resolves upon completion. */
+export function getCapabilities(card: ICard): Promise<IGPCapabilities>
+/** Gets available GlobalPlatform capabilities from a default applet and calls provided callback or resolves upon completion. */
+export function getCapabilities(
     card: ICard,
-    callback?: (err: any, capabilities: IGPCardCapabilities) => void,
-): void | Promise<IGPCardCapabilities> {
+    callback?: ((error: any, info: IGPCapabilities) => void),
+): void | Promise<IGPCapabilities> {
+
     if (typeof callback === 'undefined') {
+        return getCapabilitiesFromAid(card, []);
+    } else {
+        getCapabilitiesFromAid(card, [], callback);
+    }
+}
+
+/** Gets available GlobalPlatform capabilities from a given applet and calls provided callback upon completion. Empty aid means default applet will be used. */
+export function getCapabilitiesFromAid(card: ICard, aid: TBinData, callback: (err: any, capabilities: IGPCapabilities) => void): void
+/** Gets available GlobalPlatform capabilities from a given applet and resolves upon completion. Empty aid means default applet will be used. */
+export function getCapabilitiesFromAid(card: ICard, aid: TBinData): Promise<IGPCapabilities>
+/** Gets available GlobalPlatform capabilities from a given applet and calls provided callback or resolves upon completion. Empty aid means default applet will be used. */
+export function getCapabilitiesFromAid(
+    card: ICard,
+    aid: TBinData,
+    callback?: ((err: any, capabilities: IGPCapabilities) => void) | null,
+): void | Promise<IGPCapabilities> {
+    const importedAid = importBinData(aid);
+    Logger.trace(`Getting GP capabilities from ${ !importedAid.byteLength ? 'default applet' : `applet "${hexEncode(importedAid)}"` } ...`);
+    if (typeof callback === 'undefined' || !callback) {
         return new Promise((resolve, reject) => {
-            const callback = (error: any, capabilities: IGPCardCapabilities) => {
+            const callback = (error: any, capabilities: IGPCapabilities) => {
                 if (typeof error !== 'undefined') {
                     return reject(error);
                 }
                 return resolve(capabilities);
             };
             try {
-                gpCardCapabilitiesInternal(card, callback);
+                getCapabilitiesInternal(card, importedAid, callback);
             } catch (error: any) {
                 return reject(error);
             }
         });
     } else {
         try {
-            gpCardCapabilitiesInternal(card, callback);
+            getCapabilitiesInternal(card, importedAid, callback);
         } catch (error: any) {
             callback(error, {});
         }
     }
 }
 
-function gpCardCapabilitiesInternal(card: ICard, callback: (err: any, capabilities: IGPCardCapabilities) => void): void {
-    Logger.trace('Getting GP card capabilities...');
-    const cardCapsResult: IGPCardCapabilities = {};
-    Logger.trace('Selecting default applet...');
-    card.issueCommand(isoSelect())
+function getCapabilitiesInternal(card: ICard, aid: Uint8Array, callback: (err: any, capabilities: IGPCapabilities) => void): void {
+    const cardCapsResult: IGPCapabilities = {};
+    Logger.trace('Selecting applet...');
+    card.issueCommand(isoSelect(aid))
         .then((defaultSelectResponse) => {
             // parsing response to default select and getting ISD AID
             if (!defaultSelectResponse.isOk || defaultSelectResponse.dataLength < 1) {
-                return Promise.reject(new Error(`Error response to default select: ${defaultSelectResponse.toString()}(${defaultSelectResponse.meaning})`));
+                return Promise.reject(new Error(`Error response to select: ${defaultSelectResponse.toString()}(${defaultSelectResponse.meaning})`));
             }
 
             return Promise.resolve();
@@ -162,8 +241,10 @@ function gpCardCapabilitiesInternal(card: ICard, callback: (err: any, capabiliti
                                         }
                                         break;
                                     case '81':
+                                        cardCapsResult.ssdPrivileges = decodePrivileges(cardCapDataElem.value as Uint8Array);
                                         break;
                                     case '82':
+                                        cardCapsResult.appPrivileges = decodePrivileges(cardCapDataElem.value as Uint8Array);
                                         break;
                                     case '83':
                                         break;
