@@ -4,7 +4,7 @@ import { BerObject, Asn1Utils } from '../../ber';
 import { select as isoSelect } from '../../iso7816/commands';
 import { getData as gpGetData } from './../commands';
 import { GP_OID_STR } from './../values';
-import { hexDecode, hexEncode } from '../../utils';
+import { hexDecode, hexEncode, importBinData, TBinData } from '../../utils';
 
 type TCPLCKey = 'icFabricator' | 'icType' | 'osProviderID' | 'osReleaseDate' | 'osReleaseLevel' | 'icFabricationDate'
     | 'icSerialNumber' | 'icBatchIdentifier' | 'icModuleFabricator' | 'icModulePackagingDate' | 'iccManufacturer'
@@ -26,7 +26,7 @@ type TCPLCData = { [key in TCPLCKey]: string }
 
 
 
-export interface IGPCardInfo {
+export interface IGPInfo {
     /** Issuer Security Domain */
     isd?: string;
     gpVersion?: string;
@@ -50,59 +50,80 @@ export interface IGPCardInfo {
     cuid?: string;
 }
 
-/** Gets available card data and calls provided callback upon completion */
-export function gpCardInfo(card: ICard, callback: (err: any, info: IGPCardInfo) => void): void
-/** Gets available card data and resolves upon completion */
-export function gpCardInfo(card: ICard): Promise<IGPCardInfo>
-/** Gets available card data and calls provided callback or resolves upon completion */
-export function gpCardInfo(
+/** Gets available GlobalPlatform data from a default applet and calls provided callback upon completion. */
+export function getInfo(card: ICard, callback: (err: any, info: IGPInfo) => void): void
+/** Gets available GlobalPlatform data from a default applet and resolves upon completion. */
+export function getInfo(card: ICard): Promise<IGPInfo>
+/** Gets available GlobalPlatform data from a default applet and calls provided callback or resolves upon completion. */
+export function getInfo(
     card: ICard,
-    callback?: (error: any, info: IGPCardInfo) => void,
-): void | Promise<IGPCardInfo> {
+    callback?: ((error: any, info: IGPInfo) => void),
+): void | Promise<IGPInfo> {
+
+    if (typeof callback === 'undefined') {
+        return getInfoFromAid(card, []);
+    } else {
+        getInfoFromAid(card, [], callback);
+    }
+}
+
+/** Gets available GlobalPlatform data from a given applet and calls provided callback upon completion. Empty aid means default applet will be used. */
+export function getInfoFromAid(card: ICard, aid: TBinData, callback: (err: any, info: IGPInfo) => void): void
+/** Gets available GlobalPlatform data from a given applet and resolves upon completion. Empty aid means default applet will be used. */
+export function getInfoFromAid(card: ICard, aid: TBinData): Promise<IGPInfo>
+/** Gets available GlobalPlatform data from a given applet and calls provided callback or resolves upon completion. Empty aid means default applet will be used.*/
+export function getInfoFromAid(
+    card: ICard,
+    aid: TBinData,
+    callback?: ((error: any, info: IGPInfo) => void),
+): void | Promise<IGPInfo> {
+    const importedAid = importBinData(aid);
+    Logger.trace(`Getting GP info from ${ !importedAid.byteLength ? 'default applet' : `applet "${hexEncode(importedAid)}"` } ...`);
     if (typeof callback === 'undefined') {
         return new Promise((resolve, reject) => {
-            const callback = (error: any, info: IGPCardInfo) => {
+            const callback = (error: any, info: IGPInfo) => {
                 if (typeof error !== 'undefined') {
                     return reject(error);
                 }
                 return resolve(info);
             };
             try {
-                gpCardInfoInternal(card, callback);
+                getInfoInternal(card, importedAid, callback);
             } catch (error: any) {
                 return reject(error);
             }
         });
     } else {
         try {
-            gpCardInfoInternal(card, callback);
+            getInfoInternal(card, importedAid, callback);
         } catch (error: any) {
             callback(error, {});
         }
     }
 }
 
-function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo) => void): void {
-    Logger.trace('Getting full GP card info...');
-    const cardInfoResult: IGPCardInfo = {};
-    Logger.trace('Selecting default applet...');
-    card.issueCommand(isoSelect())
-        .then((defaultSelectResponse) => {
+function getInfoInternal(card: ICard, aid: Uint8Array, callback: (err: any, info: IGPInfo) => void): void {
+    const cardInfoResult: IGPInfo = {};
+    Logger.trace('Selecting applet...');
+    card.issueCommand(isoSelect(aid))
+        .then((selectResponse) => {
             // parsing response to default select and getting ISD AID
-            if (!defaultSelectResponse.isOk || defaultSelectResponse.dataLength < 1) {
-                return Promise.reject(new Error(`Error response to default select: ${defaultSelectResponse.toString()}(${defaultSelectResponse.meaning})`));
+            if (!selectResponse.isOk || selectResponse.dataLength < 1) {
+                return Promise.reject(new Error(`Error response to select: ${selectResponse.toString()}(${selectResponse.meaning})`));
             }
 
             let responseBer: BerObject;
             try {
-                responseBer = BerObject.parse(defaultSelectResponse.data);
+                responseBer = BerObject.parse(selectResponse.data);
             } catch (error: any) {
-                return Promise.reject(new Error(`Error parsing default select response: ${error.message}; Data:[${hexEncode(defaultSelectResponse.data)}]`));
+                return Promise.reject(new Error(`Error parsing select response: ${error.message}; Data:[${hexEncode(selectResponse.data)}]`));
             }
 
-            responseBer.print((line) => {
-                Logger.debug(line);
-            });
+            if (Logger.isAtLeastLevel(Logger.ELogLevel.DEBUG)) {
+                responseBer.print((line) => {
+                    Logger.debug(line);
+                });
+            }
 
             let tagSearchResult: BerObject[];
             tagSearchResult = responseBer.search('/6f/84');
@@ -146,9 +167,11 @@ function gpCardInfoInternal(card: ICard, callback: (err: any, info: IGPCardInfo)
                             return resolve();
                         }
 
-                        responseBer.print((line) => {
-                            Logger.debug(line);
-                        });
+                        if (Logger.isAtLeastLevel(Logger.ELogLevel.DEBUG)) {
+                            responseBer.print((line) => {
+                                Logger.debug(line);
+                            });
+                        }
 
                         /** Card recognition data */
                         const cardRecData = responseBer.search('/66/73');
