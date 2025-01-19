@@ -68,8 +68,8 @@ export class BerObject implements IBerObj {
      */
     static serialize(
         input: IBerObjInfo,
-        outBuffer: ArrayBuffer | ArrayBufferView,
-        outOffset: number = 0,
+        outBuffer?: ArrayBuffer | ArrayBufferView,
+        outOffset?: number,
     ): Uint8Array {
         return BerObject.create(input).serialize(outBuffer, outOffset);
     }

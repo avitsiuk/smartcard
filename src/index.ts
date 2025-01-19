@@ -9,6 +9,7 @@ export { Card } from './card';
 // Iso7816
 /** Common Iso7816 values */
 export * as Iso7816Values from './iso7816/values';
+
 /** Iso7816 Commands */
 export * as Iso7816Commands from './iso7816/commands';
 
@@ -19,6 +20,8 @@ export * as GPValues from './globalPlatform/values';
 export * as GPCommands from './globalPlatform/commands';
 /** GlobalPlatform utility functions */
 export * as GPUtils from './globalPlatform/utils';
+
+export { SCP11 } from './globalPlatform/sesureSession/scp11';
 
 export { Device } from './device';
 export { PcscDevicesManager } from './devices';

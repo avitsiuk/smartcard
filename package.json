@@ -1,6 +1,6 @@
 {
     "name": "smartcardx",
-    "version": "0.8.1",
+    "version": "0.9.0",
     "description": "Backend library for communication with smartcards using system native PCSC interface. Plain Iso7816 + EMV + GlobalPlatform functionality.",
     "keywords": [
         "pcsc",
@@ -63,20 +63,25 @@
         "format:fix": "prettier --write \"{src,example}/**/*.{js,ts}\"",
         "docs": "typedoc --options typedoc.json",
         "prepack": "npm run test-cov && npm run build && npm run format:check",
-        "demo": "npx ts-node --project tsconfig.cjs.json ./examples/demo.ts"
+        "demo": "npx ts-node --project tsconfig.cjs.json ./examples/demo.ts",
+        "demo2": "npx ts-node --project tsconfig.cjs.json ./examples/demo2.ts",
+        "demo3": "npx ts-node --project tsconfig.cjs.json ./examples/demo3.ts",
+        "init": "npx ts-node --project tsconfig.cjs.json ./examples/init-card.ts"
     },
     "dependencies": {
+        "md5": "^2.3.0",
         "pcsclite": "1.0.1"
     },
     "devDependencies": {
         "@types/jest": "^29.5.12",
+        "@types/md5": "^2.3.5",
         "concurrently": "^9.0.0",
         "jest": "^29.7.0",
         "prettier": "^3.2.2",
         "rimraf": "^6.0.1",
         "ts-jest": "^29.2.5",
         "ts-node": "^10.9.1",
-        "typedoc": "^0.26.6",
+        "typedoc": "^0.27.6",
         "typedoc-plugin-missing-exports": "^3.0.0",
         "typedoc-plugin-not-exported": "^0.1.6",
         "typescript": "^5.0.4"

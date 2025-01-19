@@ -1,10 +1,15 @@
 import crypto from 'crypto';
-import { hexEncode } from '../../utils';
-import { BerObject } from '../../ber/index';
+import { hexEncode, importBinData, TBinData } from '../../utils';
+import { BerObject, Tag, IBerObjInfo } from '../../ber/index';
 import ResponseApdu, { assertResponseIsOk } from '../../responseApdu';
 import CommandApdu from '../../commandApdu';
 import * as GPCommands from '../commands';
 import Card from '../../card';
+import Logger from '../../logger';
+
+const ecdhEllipticCurveName = 'prime256v1';
+const ecdsaEllipticCurveName = 'prime256v1';
+const ellipticKeyBitLen = 256;
 
 const KEY_BYTE_LEN = 32;
 const BLOCK_BYTE_LEN = 16;
@@ -40,7 +45,55 @@ interface ISessionInfo {
     id: number[];
 }
 
-export default class SCP11 {
+function isValidCertificate(gpCert: TBinData, caPubKey: crypto.KeyObject, expectedSubjPubKey?: TBinData): boolean {
+    let parsedCert: BerObject;
+    try {
+        parsedCert = BerObject.parse(importBinData(gpCert));
+    } catch (error: any) {
+        Logger.error(`Error parsing certificate: ${error.message}`);
+        throw new Error(error);
+    }
+
+    const certTagsList = parsedCert.search('/7f21');
+    if (certTagsList.length === 0) {
+        const errMsg = 'Certificate not found';
+        Logger.error(`Error parsing certificate: ${errMsg}`);
+        throw new Error(errMsg);
+    }
+    if (certTagsList.length !== 1) {
+        const errMsg = 'Unknown certificate structure';
+        Logger.error(`Error parsing certificate: ${errMsg}`);
+        throw new Error(errMsg);
+    }
+
+    let subjectPubKeyIsValid: boolean = true;
+
+    let signature: Uint8Array = new Uint8Array(0);
+    const certTbsDataElems = (certTagsList[0].value as IBerObjInfo[]).filter((tbsDataElem) => {
+        if (tbsDataElem.tag.toString() === '5f37') {
+            signature = tbsDataElem.value as Uint8Array;
+            return false;
+        }
+        if ((typeof expectedSubjPubKey !== 'undefined')
+            && (tbsDataElem.tag.toString() === '5f49')
+            && (hexEncode(tbsDataElem.value as Uint8Array) !== hexEncode(importBinData(expectedSubjPubKey)))
+        ){
+            subjectPubKeyIsValid = false;
+        }
+        return true
+    });
+
+    if (!subjectPubKeyIsValid) {
+        const errMsg = 'Unexpected certificate subject public key.';
+        Logger.error(`Error validating certificate: ${errMsg}`);
+        throw new Error(errMsg);
+    }
+
+    const certTbsData = BerObject.serialize({tag: Tag.root, value: certTbsDataElems});
+    return crypto.verify(null, certTbsData, caPubKey, signature);
+}
+
+export class SCP11 {
     private _card: Card;
     private _secLvl: TSecLvl = 0x34;
     private _includeId: boolean = false;
@@ -51,6 +104,11 @@ export default class SCP11 {
     private _sessionKeys: ISessionKeys | undefined;
     private _macChainingValue: number[];
     private _encryptCounter: number[];
+
+    private _staticEcdhPublicKey: Uint8Array | null = null;
+    private _staticEcdhPrivateKey: Uint8Array | null = null;
+    private _staticEcdhPublicKeyCertificate: Uint8Array | null = null;
+    private _validCAEcdsaPublicKey: crypto.KeyObject | null = null;
 
     private _commandAuthenticateFunction:
         | ((cmd: CommandApdu) => CommandApdu)
@@ -85,10 +143,12 @@ export default class SCP11 {
         this._macChainingValue = new Array<number>(BLOCK_BYTE_LEN).fill(0);
         this._encryptCounter = new Array<number>(BLOCK_BYTE_LEN).fill(0);
         this._encryptCounter[this._encryptCounter.length - 1] = 1;
-        this.reset();
+        this.resetSession();
     }
 
-    reset() {
+    resetSession() {
+        this._card.setCommandTransformer();
+        this._card.setResponseTransformer();
         this._isActive = false;
         this._commandAuthenticateFunction = undefined;
         this._sessionKeys = undefined;
@@ -341,11 +401,9 @@ export default class SCP11 {
     }
 
     public isResponseMacValid(rsp: ResponseApdu): boolean {
-        // console.log(`RSP: [${rsp.toString()}]`);
 
         const plainDataLen = rsp.dataLength - MAC_BYTE_LEN;
         const expectedMac = rsp.data.slice(plainDataLen);
-        // console.log(`EXP: [${arrayToHex(expectedMac)}]`);
 
         // [macChainingValue]+[data without mac]+[status]+[80]+[00...00]
         let authDataLen = BLOCK_BYTE_LEN + plainDataLen + 2;
@@ -355,11 +413,16 @@ export default class SCP11 {
             authDataLen + missingPaddingBytes,
             0,
         );
+
         dataToAuthenticate.set(this._macChainingValue, 0);
         dataToAuthenticate.set(rsp.data.slice(0, plainDataLen), BLOCK_BYTE_LEN);
         dataToAuthenticate.set(rsp.status, BLOCK_BYTE_LEN + plainDataLen);
         dataToAuthenticate.set([0x80], BLOCK_BYTE_LEN + plainDataLen + 2);
-        // console.log(`DTA: [${dataToAuthenticate.toString('hex')}]`);
+
+        // console.log(`sEnc Key (${this._sessionKeys!.sEnc.length} bytes): `);
+        // console.log(`[${hexEncode(this._sessionKeys!.sEnc)}]`);
+        // console.log(`encrypt counter: (${this._encryptCounter.length} bytes): `);
+        // console.log(`[${hexEncode(this._encryptCounter)}]`);
 
         const icvCipher = crypto
             .createCipheriv(
@@ -372,6 +435,17 @@ export default class SCP11 {
             icvCipher.update(Buffer.from(this._encryptCounter)),
             icvCipher.final(),
         ]).subarray(0, BLOCK_BYTE_LEN);
+
+        // console.log(`icv (${icv.byteLength} bytes): `);
+        // console.log(`[${icv.toString('hex')}]`);
+
+        // console.log(`sRmac Key (${this._sessionKeys!.sRmac.length} bytes): `);
+        // console.log(`[${hexEncode(this._sessionKeys!.sRmac)}]`);
+
+        // console.log(`mac chaining value: (${this._macChainingValue.length} bytes): `);
+        // console.log(`[${hexEncode(this._macChainingValue)}]`);
+        // console.log(`data to authenticate (${dataToAuthenticate.byteLength} bytes): `);
+        // console.log(`[${dataToAuthenticate.toString('hex')}]`);
 
         // prepend BLOCK_BYTE_LEN-byte mac chaining value to the data before
         const macCipher = crypto
@@ -391,6 +465,12 @@ export default class SCP11 {
                 macCipherResult.length - BLOCK_BYTE_LEN,
             ),
         ];
+
+        // console.log(`new mac chaining value: (${this._macChainingValue.length} bytes): `);
+        // console.log(`[${hexEncode(this._macChainingValue)}]`);
+
+        // console.log('expected mac:');
+        // console.log(hexEncode([...expectedMac]));
 
         if (
             hexEncode(this._macChainingValue.slice(0, MAC_BYTE_LEN)) ===
@@ -472,14 +552,19 @@ export default class SCP11 {
      * @param ePkSdEcka - secure domain(applet) ephemeral public key for EC key agreement protocol
      */
     private genSessionKeys(
+        skOceEcka: number[],
         eSkOceEcka: number[],
         pkSdEcka: number[],
         ePkSdEcka: number[],
     ): void {
-        const eEcka = crypto.createECDH('prime256v1');
+        const ecka = crypto.createECDH(ecdhEllipticCurveName);
+        ecka.setPrivateKey(Buffer.from(skOceEcka));
+        const shSes = ecka.computeSecret(Buffer.from(pkSdEcka));
+
+        const eEcka = crypto.createECDH(ecdhEllipticCurveName);
         eEcka.setPrivateKey(Buffer.from(eSkOceEcka));
         const shSee = eEcka.computeSecret(Buffer.from(ePkSdEcka));
-        const shSes = eEcka.computeSecret(Buffer.from(pkSdEcka));
+
         const shS = Buffer.concat([shSee, shSes]);
 
         const sharedInfo = Buffer.from([this._secLvl, 0x88, 0x20]);
@@ -514,6 +599,7 @@ export default class SCP11 {
         intAuthCmd: CommandApdu,
         intAuthResp: ResponseApdu,
     ): boolean {
+        Logger.trace(`Validating receipt`);
         const rspBerObj = BerObject.parse(intAuthResp.data);
         const missingPaddingBytes =
             BLOCK_BYTE_LEN - ((intAuthCmd.getLc() + 68) % BLOCK_BYTE_LEN);
@@ -575,108 +661,313 @@ export default class SCP11 {
         return false;
     }
 
-    /** Sends INITIALIZE_UPDATE and EXTERNAL AUTHENTICATE commands. Sets session as active on success */
-    initAndAuth(keyVer: number = 0, keyId: number = 0): Promise<ResponseApdu> {
-        return new Promise(async (resolve, reject) => {
-            this.reset();
+    // setStaticEcdhKeyPair(staticPublicKey: TBinData, privateKey: TBinData):  {
+    //     const pubKey = importBinData(staticPublicKey);
+    // }
 
+    /**
+     * Allows to import certificate authority ECDSA public key
+     * @param caEcdsaPublicKey - DER-encoded public ECDSA key of the certificate authority in SPKI format. Prime256v1
+     */
+    setCAEcdsaPublicKey(caEcdsaPublicKey: TBinData): SCP11 {
+        Logger.trace('Importing certificate authority public ECDSA key');
+        let pubKey: crypto.KeyObject;
+        try {
+            const importedBin = importBinData(caEcdsaPublicKey);
+            pubKey = crypto.createPublicKey({key: Buffer.from(importBinData(caEcdsaPublicKey)), format: 'der', type: 'spki'});
+        } catch (error: any) {
+            Logger.error(`Error importing certificate authority public ECDSA key: ${error.message}`);
+            throw new Error(error);
+        }
+        if (!pubKey.asymmetricKeyDetails
+            || !pubKey.asymmetricKeyDetails.namedCurve
+            || (pubKey.asymmetricKeyDetails.namedCurve !== ecdsaEllipticCurveName)
+        ) {
+            const errMsg = `Wrong key type. Expected: prime256v1 public key`; 
+            Logger.error(errMsg);
+            throw new Error(errMsg);
+        }
+        this._validCAEcdsaPublicKey = pubKey;
+        return this;
+    }
+
+    /** DER-encoded public ECDSA key of the certificate authority in SPKI format. Prime256v1 */
+    set caEcdsaPublicKey(caEcdsaPublicKey: TBinData) {
+        this.setCAEcdsaPublicKey(caEcdsaPublicKey);
+    }
+
+    /** DER-encoded public ECDSA key of the certificate authority in SPKI format. Prime256v1 */
+    get caEcdsaPublicKey(): Uint8Array | null {
+        return this._validCAEcdsaPublicKey ? 
+            new Uint8Array(this._validCAEcdsaPublicKey.export({ format: 'der', type: 'spki' }))
+            : null;
+    }
+
+    setStaticEcdhKeypair(staticPublicKey: TBinData, staticPrivateKey: TBinData): SCP11 {
+        Logger.trace('Importing static OCE ECDH key pair');
+        let pubKey: Uint8Array;
+        let privKey: Uint8Array;
+        try {
+            pubKey = importBinData(staticPublicKey);
+            privKey = importBinData(staticPrivateKey);
+        } catch (error: any) {
+            Logger.error(`Error importing static ECDH key pair: ${error.message}`);
+            throw new Error(error);
+        }
+
+        if (pubKey.byteLength !== (KEY_BYTE_LEN * 2 + 1) || pubKey[0] != 0x04) {
+            const errMsg = `Static public ECDH key must be in in raw uncompressed format ("0x04xy") and be ${(KEY_BYTE_LEN * 2 + 1)} bytes long.`;
+            Logger.error(`Error importing static ECDH key pair: ${errMsg}`);
+            throw new Error(errMsg);
+        }
+
+        if (privKey.byteLength !== KEY_BYTE_LEN) {
+            const errMsg = `Static private ECDH key must be ${KEY_BYTE_LEN} bytes long.`;
+            Logger.error(`Error importing static ECDH key pair: ${errMsg}`);
+            throw new Error(errMsg);
+        }
+
+        this._staticEcdhPublicKey = pubKey;
+        this._staticEcdhPrivateKey = privKey;
+
+        return this;
+    }
+
+    setStaticEcdhPublicKeyCertificate(certificate: TBinData): SCP11 {
+        if (!this._validCAEcdsaPublicKey) {
+            const errMsg = 'Certificate authority public ECDSA key must be set before certificate.';
+            Logger.error(`Error setting OCE static ECDH public key certificate: ${errMsg}`);
+            throw new Error(errMsg);
+        }
+        if (!this._staticEcdhPublicKey || !this._staticEcdhPrivateKey) {
+            const errMsg = 'Static off-card entity ECDH keypair must be set before certificate.';
+            Logger.error(`Error setting OCE static ECDH public key certificate: ${errMsg}`);
+            throw new Error(errMsg);
+        }
+        let certIsValid: boolean = false;
+        try {
+            certIsValid = isValidCertificate(certificate, this._validCAEcdsaPublicKey, this._staticEcdhPublicKey);
+        } catch (error: any) {
+            Logger.error(`Error validating certificate: ${error.message}`);
+            throw new Error(error);
+        }
+        if (!certIsValid) {
+            const errMsg = 'Invalid OCE static ECDH public key certificate.';
+            Logger.error(errMsg);
+            throw new Error(errMsg);
+        }
+        this._staticEcdhPublicKeyCertificate = importBinData(certificate);
+        return this;
+    }
+
+    /* Start SCP11a session */
+    mutAuth(keyVer: number = 0, keyId: number = 0): Promise<ResponseApdu> {
+        Logger.trace(`Initializing secure session ...`);
+        return new Promise(async (resolve, reject) => {
+            this.resetSession();
+            if (!this._validCAEcdsaPublicKey) {
+                return reject('Missing certificate authority public ECDSA key');
+            }
+            if (!this._staticEcdhPrivateKey) {
+                return reject('Missing off-card entity static private ECDH key');
+            }
+            if (!this._staticEcdhPublicKey) {
+                return reject('Missing off-card entity static public ECDH key');
+            }
+            if (!this._staticEcdhPublicKeyCertificate) {
+                return reject('Missing off-card entity static public ECDH key certificate');
+            }
             const currAutoGetResponse = this._card.autoGetResponse;
             this._card.setAutoGetResponse(true);
-            // getting card static public key
+            Logger.trace(`Getting card static public key ...`);
             this._card
-                .issueCommand(new CommandApdu('8087000000'))
+                .issueCommand(new CommandApdu('8086000000'))
                 .then(async (response) => {
                     try {
                         assertResponseIsOk(response);
                     } catch (e: any) {
-                        this.reset();
+                        this.resetSession();
                         throw new Error(
                             `Error getting card static public key: ${e.message}`,
                         );
                     }
                     const berObj = BerObject.parse(response.data);
-                    const pkSdEcka = berObj.search('/5f49')[0]
-                        .value as Uint8Array;
-                    // generating ephemeral OCE keypair
-                    const ecdh = crypto.createECDH('prime256v1');
-                    ecdh.generateKeys();
-                    const ePkOceEcka = ecdh.getPublicKey();
 
-                    // sending int_auith command with OCE ephemeral public key and session settings
-                    const intAuthCmd = GPCommands.intAuth(
-                        [...ePkOceEcka],
-                        this._secLvl,
-                        this._includeId,
-                        this._id,
-                    );
-                    this._card
-                        .issueCommand(intAuthCmd)
-                        .then((response) => {
+                    if (Logger.isAtLeastLevel(Logger.ELogLevel.DEBUG)) {
+                        berObj.print((line) => {
+                            Logger.debug(line);
+                        });
+                    }
+
+                    const staticKeySearchResult = berObj.search('/5f49');
+
+                    // "04" + x(key length) + y(key length)
+                    const expectedPubKeyByteLen = (ellipticKeyBitLen / 8) * 2 + 1;
+
+                    if (staticKeySearchResult.length < 1
+                        || ((staticKeySearchResult[0].value as Uint8Array).byteLength !== expectedPubKeyByteLen)
+                    ) {
+                        throw new Error('Could not get card static public key');
+                    }
+
+                    const pkSdEcka = staticKeySearchResult[0].value as Uint8Array;
+
+                    // getting card certificate
+                    this._card.issueCommand(new CommandApdu('80cabf21'))
+                        .then((getCardCertRsp) => {
                             try {
-                                assertResponseIsOk(response);
+                                assertResponseIsOk(getCardCertRsp);
                             } catch (e: any) {
-                                this.reset();
+                                this.resetSession();
                                 throw new Error(
-                                    `Error during INT_AUTH: ${e.message}`,
+                                    `Error getting card certificate: ${e.message}`,
                                 );
                             }
-                            const berObj = BerObject.parse(response.data);
-                            // getting card ephemeral public key
-                            const ePkSdEcka = berObj.search('/5f49')[0]
-                                .value as Uint8Array;
-                            this.genSessionKeys(
-                                [...ecdh.getPrivateKey()],
-                                [...pkSdEcka],
-                                [...ePkSdEcka],
-                            );
-                            // validating receipt from intAuthCmd response
-                            // if receipt is valid, it gets set as new mac chaining value
-                            if (!this.isReceiptValid(intAuthCmd, response)) {
-                                throw new Error(
-                                    `Authentication receipt not valid`,
-                                );
+                            let cardCertIsValid: boolean = false;
+                            try {
+                                cardCertIsValid = isValidCertificate(getCardCertRsp.data, this._validCAEcdsaPublicKey!, pkSdEcka);
+                            } catch (error: any) {
+                                Logger.error(`Error validating card static ECDH public key certificate: ${error.message}`);
+                                return reject(error);
+                            }
+                            if (!cardCertIsValid) {
+                                const errMsg = 'Invalid card static ECDH public key certificate.';
+                                Logger.error(errMsg);
+                                return reject(errMsg);
                             }
 
-                            this._isActive = true;
+                            // perform_security_operation (load OCE cert onto card)
+                            this._card.issueCommand(new CommandApdu('802a0000').setData(this._staticEcdhPublicKeyCertificate!))
+                            .then((psoRsp) => {
+                                try {
+                                    assertResponseIsOk(psoRsp);
+                                } catch (e: any) {
+                                    this.resetSession();
+                                    throw new Error(
+                                        `Error loading OCE certificate onto card: ${e.message}`,
+                                    );
+                                }
 
-                            this._commandAuthenticateFunction = (
-                                cmd: CommandApdu,
-                            ) => {
-                                let authenticatedCmd = cmd;
-                                if (this._secLvl === 0x3c) {
-                                    authenticatedCmd = this.cEnc(cmd);
-                                }
-                                authenticatedCmd = this.cMac(authenticatedCmd);
-                                this.increaseCounter();
-                                return authenticatedCmd;
-                            };
-                            this._responseAuthenticateFunction = (
-                                rsp: ResponseApdu,
-                            ) => {
-                                let authenticatedRsp = rsp;
-                                if (
-                                    !this.isResponseMacValid(authenticatedRsp)
-                                ) {
-                                    throw new Error('Response mac not valid');
-                                }
-                                if (this._secLvl === 0x3c) {
-                                    authenticatedRsp = new ResponseApdu([
-                                        ...authenticatedRsp.data.slice(
-                                            0,
-                                            authenticatedRsp.dataLength -
-                                                MAC_BYTE_LEN,
-                                        ),
-                                        ...authenticatedRsp.status,
-                                    ]);
-                                    authenticatedRsp =
-                                        this.decryptResponse(authenticatedRsp);
-                                }
-                                this.increaseCounter();
-                                return authenticatedRsp;
-                            };
-                            return resolve(response);
+                                // initializing ephemeral key agreement
+                                const eECDH = crypto.createECDH(ecdhEllipticCurveName);
+                                eECDH.generateKeys();
+                                const ePkOceEcka = eECDH.getPublicKey();
+
+                                // sending int_auith command with OCE ephemeral public key and session settings
+                                const mutAuthCmd = GPCommands.mutAuth(
+                                    [...ePkOceEcka],
+                                    this._secLvl,
+                                    this._includeId,
+                                    this._id,
+                                );
+
+                                Logger.trace('Submitting MUTUAL_AUTHENTICATE command');
+                                Logger.trace(mutAuthCmd.toString());
+
+                                /////////////////////////////////////
+
+                                this._card.issueCommand(mutAuthCmd)
+                                    .then((response) => {
+                                        try {
+                                            assertResponseIsOk(response);
+                                        } catch (e: any) {
+                                            this.resetSession();
+                                            throw new Error(
+                                                `Error during MUT_AUTH: ${e.message}`,
+                                            );
+                                        }
+                                        const berObj = BerObject.parse(response.data);
+
+                                        if (Logger.isAtLeastLevel(Logger.ELogLevel.DEBUG)) {
+                                            berObj.print((line) => {
+                                                Logger.debug(line);
+                                            });
+                                        }
+
+                                        const ephemeralKeySearchResult = berObj.search('/5f49');
+
+                                        // "04" + x(key length) + y(key length)
+                                        const expectedPubKeyByteLen = (ellipticKeyBitLen / 8) * 2 + 1;
+
+                                        if (ephemeralKeySearchResult.length < 1
+                                            || ((ephemeralKeySearchResult[0].value as Uint8Array).byteLength !== expectedPubKeyByteLen)
+                                        ) {
+                                            throw new Error('Could not get card ephemeral public key');
+                                        }
+
+                                        // getting card ephemeral public key
+                                        const ePkSdEcka = ephemeralKeySearchResult[0].value as Uint8Array;
+
+                                        // initializing static key agreement
+
+                                        // generating session keys
+                                        this.genSessionKeys(
+                                            [...this._staticEcdhPrivateKey!],
+                                            [...eECDH.getPrivateKey()],
+                                            [...pkSdEcka],
+                                            [...ePkSdEcka],
+                                        );
+                                        // validating receipt from intAuthCmd response
+                                        // if receipt is valid, it gets set as new mac chaining value
+                                        if (!this.isReceiptValid(mutAuthCmd, response)) {
+                                            throw new Error(
+                                                `Authentication receipt not valid`,
+                                            );
+                                        }
+
+                                        this._card.setCommandTransformer(this.commandAuthenticator);
+                                        this._card.setResponseTransformer(this.responseAuthenticator);
+
+                                        this._isActive = true;
+
+                                        this._commandAuthenticateFunction = (
+                                            cmd: CommandApdu,
+                                        ) => {
+                                            let authenticatedCmd = cmd;
+                                            if (this._secLvl === 0x3c) {
+                                                authenticatedCmd = this.cEnc(cmd);
+                                            }
+                                            authenticatedCmd = this.cMac(authenticatedCmd);
+                                            this.increaseCounter();
+                                            return authenticatedCmd;
+                                        };
+                                        this._responseAuthenticateFunction = (
+                                            rsp: ResponseApdu,
+                                        ) => {
+                                            let authenticatedRsp = rsp;
+                                            if (
+                                                !this.isResponseMacValid(authenticatedRsp)
+                                            ) {
+                                                throw new Error('Response mac not valid');
+                                            }
+                                            if (this._secLvl === 0x3c) {
+                                                authenticatedRsp = new ResponseApdu([
+                                                    ...authenticatedRsp.data.slice(
+                                                        0,
+                                                        authenticatedRsp.dataLength -
+                                                            MAC_BYTE_LEN,
+                                                    ),
+                                                    ...authenticatedRsp.status,
+                                                ]);
+                                                authenticatedRsp =
+                                                    this.decryptResponse(authenticatedRsp);
+                                            }
+                                            this.increaseCounter();
+                                            return authenticatedRsp;
+                                        };
+                                        return resolve(response);
+                                    })
+                                    .catch((e) => {
+                                        return reject(e);
+                                    });
+
+                                /////////////////////////////////////
+                            })
+                            .catch((e: any) => {
+                                return reject(e);
+                            });
                         })
-                        .catch((e) => {
+                        .catch((e: any) => {
                             return reject(e);
                         });
                 })
@@ -685,4 +976,152 @@ export default class SCP11 {
                 });
         });
     }
+
+    // /** Sends INITIALIZE_UPDATE and INTERNAL_AUTHENTICATE commands. Sets session as active on success */
+    // intAuth(keyVer: number = 0, keyId: number = 0): Promise<ResponseApdu> {
+    //     Logger.trace(`Initializing secure session ...`);
+    //     return new Promise(async (resolve, reject) => {
+    //         this.reset();
+    //         const currAutoGetResponse = this._card.autoGetResponse;
+    //         this._card.setAutoGetResponse(true);
+    //         Logger.trace(`Getting card static public key ...`);
+    //         this._card
+    //             .issueCommand(new CommandApdu('8086000000'))
+    //             .then(async (response) => {
+    //                 try {
+    //                     assertResponseIsOk(response);
+    //                 } catch (e: any) {
+    //                     this.reset();
+    //                     throw new Error(
+    //                         `Error getting card static public key: ${e.message}`,
+    //                     );
+    //                 }
+    //                 const berObj = BerObject.parse(response.data);
+
+    //                 if (Logger.isAtLeastLevel(Logger.ELogLevel.DEBUG)) {
+    //                     berObj.print((line) => {
+    //                         Logger.debug(line);
+    //                     });
+    //                 }
+
+    //                 const staticKeySearchResult = berObj.search('/5f49');
+
+    //                 // "04" + x(key length) + y(key length)
+    //                 const expectedPubKeyByteLen = (ellipticKeyBitLen / 8) * 2 + 1;
+
+    //                 if (staticKeySearchResult.length < 1
+    //                     || ((staticKeySearchResult[0].value as Uint8Array).byteLength !== expectedPubKeyByteLen)
+    //                 ) {
+    //                     throw new Error('Could not get card static public key');
+    //                 }
+
+    //                 const pkSdEcka = staticKeySearchResult[0].value as Uint8Array;
+    //                 // generating ephemeral OCE keypair
+    //                 const ecdh = crypto.createECDH(ecdhEllipticCurveName);
+    //                 ecdh.generateKeys();
+    //                 const ePkOceEcka = ecdh.getPublicKey();
+
+    //                 // sending int_auith command with OCE ephemeral public key and session settings
+    //                 const intAuthCmd = GPCommands.intAuth(
+    //                     [...ePkOceEcka],
+    //                     this._secLvl,
+    //                     this._includeId,
+    //                     this._id,
+    //                 );
+
+    //                 Logger.trace('Submitting INTERNAL_AUTHENTICATE command');
+    //                 Logger.trace(intAuthCmd.toString());
+    //                 this._card
+    //                     .issueCommand(intAuthCmd)
+    //                     .then((response) => {
+    //                         try {
+    //                             assertResponseIsOk(response);
+    //                         } catch (e: any) {
+    //                             this.reset();
+    //                             throw new Error(
+    //                                 `Error during INT_AUTH: ${e.message}`,
+    //                             );
+    //                         }
+    //                         const berObj = BerObject.parse(response.data);
+
+    //                         if (Logger.isAtLeastLevel(Logger.ELogLevel.DEBUG)) {
+    //                             berObj.print((line) => {
+    //                                 Logger.debug(line);
+    //                             });
+    //                         }
+
+    //                         const ephemeralKeySearchResult = berObj.search('/5f49');
+
+    //                         // "04" + x(key length) + y(key length)
+    //                         const expectedPubKeyByteLen = (ellipticKeyBitLen / 8) * 2 + 1;
+
+    //                         if (ephemeralKeySearchResult.length < 1
+    //                             || ((ephemeralKeySearchResult[0].value as Uint8Array).byteLength !== expectedPubKeyByteLen)
+    //                         ) {
+    //                             throw new Error('Could not get card ephemeral public key');
+    //                         }
+
+    //                         // getting card ephemeral public key
+    //                         const ePkSdEcka = ephemeralKeySearchResult[0].value as Uint8Array;
+    //                         this.genSessionKeys(
+    //                             [...ecdh.getPrivateKey()],
+    //                             [...pkSdEcka],
+    //                             [...ePkSdEcka],
+    //                         );
+    //                         // validating receipt from intAuthCmd response
+    //                         // if receipt is valid, it gets set as new mac chaining value
+    //                         if (!this.isReceiptValid(intAuthCmd, response)) {
+    //                             throw new Error(
+    //                                 `Authentication receipt not valid`,
+    //                             );
+    //                         }
+
+    //                         this._isActive = true;
+
+    //                         this._commandAuthenticateFunction = (
+    //                             cmd: CommandApdu,
+    //                         ) => {
+    //                             let authenticatedCmd = cmd;
+    //                             if (this._secLvl === 0x3c) {
+    //                                 authenticatedCmd = this.cEnc(cmd);
+    //                             }
+    //                             authenticatedCmd = this.cMac(authenticatedCmd);
+    //                             this.increaseCounter();
+    //                             return authenticatedCmd;
+    //                         };
+    //                         this._responseAuthenticateFunction = (
+    //                             rsp: ResponseApdu,
+    //                         ) => {
+    //                             let authenticatedRsp = rsp;
+    //                             if (
+    //                                 !this.isResponseMacValid(authenticatedRsp)
+    //                             ) {
+    //                                 throw new Error('Response mac not valid');
+    //                             }
+    //                             if (this._secLvl === 0x3c) {
+    //                                 authenticatedRsp = new ResponseApdu([
+    //                                     ...authenticatedRsp.data.slice(
+    //                                         0,
+    //                                         authenticatedRsp.dataLength -
+    //                                             MAC_BYTE_LEN,
+    //                                     ),
+    //                                     ...authenticatedRsp.status,
+    //                                 ]);
+    //                                 authenticatedRsp =
+    //                                     this.decryptResponse(authenticatedRsp);
+    //                             }
+    //                             this.increaseCounter();
+    //                             return authenticatedRsp;
+    //                         };
+    //                         return resolve(response);
+    //                     })
+    //                     .catch((e) => {
+    //                         return reject(e);
+    //                     });
+    //             })
+    //             .catch((e) => {
+    //                 return reject(e);
+    //             });
+    //     });
+    // }
 }

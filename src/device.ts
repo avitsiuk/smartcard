@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import Logger from './logger';
 import { CardReader, Status } from './typesPcsclite';
 import { IDevice, TDeviceEventName } from './typesInternal';
-import { importBinData } from './utils';
+import { hexEncode, importBinData } from './utils';
 import Card from './card';
 
 export class Device implements IDevice {
@@ -119,6 +119,8 @@ export class Device implements IDevice {
                         response.byteOffset + response.byteLength,
                     );
                 }
+                Logger.trace(`Received response from device "${this.name}"; res_len: ${u8Arr.byteLength}; is_error: ${err ? true : false }; protocol: ${protocol}`);
+                Logger.trace(`Raw response received: [${hexEncode(u8Arr)}]`);
                 cb(err, u8Arr);
             },
         );

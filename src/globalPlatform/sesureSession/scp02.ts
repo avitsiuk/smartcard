@@ -3,7 +3,13 @@ import { hexEncode } from '../../utils';
 import ResponseApdu, { assertResponseIsOk } from '../../responseApdu';
 import CommandApdu from '../../commandApdu';
 import * as GPCommands from '../commands';
+import * as IsoCommands from '../../iso7816/commands'
 import Card from '../../card';
+
+/*
+'i' value encoding
+- - - - - - - -
+*/
 
 type TSecLvl = 0 | 1 | 3;
 
@@ -388,7 +394,7 @@ export default class SCP02 {
             // sending INITIALIZE_UPDATE command with host challenge
             this._card
                 .issueCommand(
-                    GPCommands.initUpdate(hostChallenge, keyVer, keyId),
+                    GPCommands.initUpdate(keyVer, hostChallenge),
                 )
                 .then((response) => {
                     try {

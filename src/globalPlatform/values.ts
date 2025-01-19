@@ -11,6 +11,8 @@ export const DEF_STATIC_128_KEYS = {
 /** List of Ins bytes as defined in GlobalPlatformCard specifications (2.2.1/2.3.1)*/
 export enum EIns {
     // only for SCP
+    /** 0x2A */
+    PERFORM_SECURITY_OP = 0x2a, // perform_security_op_even in iso
     /** 0x50 */
     INIT_UPDATE = 0x50, // no iso variant
     /** 0x7A */
@@ -68,6 +70,18 @@ export enum EPrivileges {
     ContactlessActivation,     // --1-----
     ContactlessSelfActivation, // ---1----
 }
+
+export enum ESecurityLevel {
+    Authenticated,    // 10------
+    AnyAuthenticated, // 01------
+    CDecryption,      // ------1-
+    CMac,             // -------1
+    REncryption,      // --1-----
+    RMac,             // ---1----
+    NoSecurityLevel,  // 00000000
+}
+
+
 
 /** Executable Load File Life Cycle */
 export enum ELifeCycleExecLoadFile {
@@ -130,7 +144,7 @@ export enum EKeyType {
     RSA_CH_REM_DP1 = 0xA7,
     /** RSA Private Key - Chinese Remainder DQ1 component ( d mod (q-1) ) */
     RSA_CH_REM_DQ1 = 0xA8,
-    /** ECC public key */
+    /** ECC public key (uncompressed) */
     ECC_PUB = 0xB0,
     /** ECC private key */
     ECC_PRIV = 0xB1,
@@ -140,7 +154,7 @@ export enum EKeyType {
     ECC_PARAM_A = 0xB3,
     /** ECC field parameter B (second coefficient) */
     ECC_PARAM_B = 0xB4,
-    /** ECC field parameter G (generator) */
+    /** ECC field parameter G (generator, uncompressed) */
     ECC_PARAM_G = 0xB5,
     /** ECC field parameter N (order of generator) */
     ECC_PARAM_N = 0xB6,

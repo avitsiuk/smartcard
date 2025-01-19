@@ -1,2 +1,3 @@
-export { gpCardInfo, type IGPCardInfo } from './cardInfo';
-export { gpCardCapabilities, type IGPCardCapabilities } from './cardCapabilities';
+export { getInfo, getInfoFromAid, type IGPInfo } from './getInfo';
+export { getCapabilities, getCapabilitiesFromAid, type IGPCapabilities } from './getCapabilities';
+export { getKeyInfo, type IGPKeyInfo } from './getKeyInfo';
