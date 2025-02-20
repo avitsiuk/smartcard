@@ -3,7 +3,7 @@ import { hexEncode } from '../../utils';
 import ResponseApdu, { assertResponseIsOk } from '../../responseApdu';
 import CommandApdu from '../../commandApdu';
 import * as GPCommands from '../commands';
-import * as IsoCommands from '../../iso7816/commands'
+import * as IsoCommands from '../../iso7816/commands';
 import Card from '../../card';
 
 /*
@@ -393,9 +393,7 @@ export default class SCP02 {
             const hostChallenge = [...crypto.randomBytes(8)];
             // sending INITIALIZE_UPDATE command with host challenge
             this._card
-                .issueCommand(
-                    GPCommands.initUpdate(keyVer, hostChallenge),
-                )
+                .issueCommand(GPCommands.initUpdate(keyVer, hostChallenge))
                 .then((response) => {
                     try {
                         assertResponseIsOk(response);

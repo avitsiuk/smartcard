@@ -1,6 +1,12 @@
 import { EventEmitter } from 'events';
 import Logger from './logger';
-import { hexEncode, type IAtrInfo, importBinData, type TBinData, decodeAtr } from './utils';
+import {
+    hexEncode,
+    type IAtrInfo,
+    importBinData,
+    type TBinData,
+    decodeAtr,
+} from './utils';
 import CommandApdu from './commandApdu';
 import ResponseApdu from './responseApdu';
 import { type ICard, type IDevice, type TCardEventName } from './typesInternal';
@@ -163,10 +169,7 @@ export class Card implements ICard {
             middleCallback = (err: any, respBuffer: Uint8Array) => {
                 if (err) {
                     this._isBusy = false;
-                    callback(
-                        err,
-                        new ResponseApdu(),
-                    );
+                    callback(err, new ResponseApdu());
                     return;
                 }
                 if (respBuffer.byteLength < 2) {
@@ -212,10 +215,7 @@ export class Card implements ICard {
             middleCallback = (err: any, respBuffer: Uint8Array) => {
                 if (err) {
                     this._isBusy = false;
-                    callback(
-                        err,
-                        new ResponseApdu(),
-                    );
+                    callback(err, new ResponseApdu());
                     return;
                 }
                 if (respBuffer.byteLength < 2) {
@@ -462,7 +462,10 @@ export class Card implements ICard {
         }
     }
 
-    on(eventName: 'command-issued', eventHandler: (event: { card: Card; command: CommandApdu }) => void): Card;
+    on(
+        eventName: 'command-issued',
+        eventHandler: (event: { card: Card; command: CommandApdu }) => void,
+    ): Card;
     on(
         eventName: 'response-received',
         eventHandler: (event: {

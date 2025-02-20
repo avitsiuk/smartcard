@@ -88,7 +88,9 @@ export class Device implements IDevice {
         };
 
         reader.on('status', (status: Status) => {
-            Logger.trace(`Device status change. Status: ${status.state}. Device: "${this.name}"`);
+            Logger.trace(
+                `Device status change. Status: ${status.state}. Device: "${this.name}"`,
+            );
             const changes = reader.state ^ status.state;
             if (changes) {
                 if (isCardRemoved(changes, reader, status)) {
@@ -106,7 +108,9 @@ export class Device implements IDevice {
         protocol: number,
         cb: (err: any, response: Uint8Array) => void,
     ) {
-        Logger.trace(`Transmitting ${data.byteLength} bytes to device "${this.name}"; res_len: ${res_len}; protocol: ${protocol}`);
+        Logger.trace(
+            `Transmitting ${data.byteLength} bytes to device "${this.name}"; res_len: ${res_len}; protocol: ${protocol}`,
+        );
         this.reader.transmit(
             Buffer.from(data),
             res_len,
@@ -119,7 +123,9 @@ export class Device implements IDevice {
                         response.byteOffset + response.byteLength,
                     );
                 }
-                Logger.trace(`Received response from device "${this.name}"; res_len: ${u8Arr.byteLength}; is_error: ${err ? true : false }; protocol: ${protocol}`);
+                Logger.trace(
+                    `Received response from device "${this.name}"; res_len: ${u8Arr.byteLength}; is_error: ${err ? true : false}; protocol: ${protocol}`,
+                );
                 Logger.trace(`Raw response received: [${hexEncode(u8Arr)}]`);
                 cb(err, u8Arr);
             },

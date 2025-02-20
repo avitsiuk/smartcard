@@ -1,34 +1,34 @@
 import Logger from '../../logger';
-import { ICard } from "../../typesInternal";
+import { ICard } from '../../typesInternal';
 import { BerObject, Asn1Utils } from '../../ber';
 import { select as isoSelect } from '../../iso7816/commands';
 import { getData as gpGetData } from './../commands';
 import { GP_OID_STR, EKeyType } from './../values';
 import { hexDecode, hexEncode, importBinData, TBinData } from '../../utils';
 
-
-
 export interface IGPKeyInfo {
     [key: number]: {
         /** Key (component) version number */
-        version: number,
+        version: number;
         /** Key (component) type */
-        type: keyof typeof EKeyType,
+        type: keyof typeof EKeyType;
         /** Key (component) length in bytes */
-        length: number,
-    }
+        length: number;
+    };
 }
 
 /** Gets available GlobalPlatform key data from a default applet and calls provided callback upon completion. */
-export function getKeyInfo(card: ICard, callback: (err: any, info: IGPKeyInfo) => void): void
+export function getKeyInfo(
+    card: ICard,
+    callback: (err: any, info: IGPKeyInfo) => void,
+): void;
 /** Gets available GlobalPlatform key data from a default applet and resolves upon completion. */
-export function getKeyInfo(card: ICard): Promise<IGPKeyInfo>
+export function getKeyInfo(card: ICard): Promise<IGPKeyInfo>;
 /** Gets available GlobalPlatform key data from a default applet and calls provided callback or resolves upon completion. */
 export function getKeyInfo(
     card: ICard,
-    callback?: ((error: any, info: IGPKeyInfo) => void),
+    callback?: (error: any, info: IGPKeyInfo) => void,
 ): void | Promise<IGPKeyInfo> {
-
     if (typeof callback === 'undefined') {
         return getKeyInfoFromAid(card, []);
     } else {
@@ -37,17 +37,26 @@ export function getKeyInfo(
 }
 
 /** Gets available GlobalPlatform key data from a given applet and calls provided callback upon completion. Empty aid means default applet will be used. */
-export function getKeyInfoFromAid(card: ICard, aid: TBinData, callback: (err: any, info: IGPKeyInfo) => void): void
+export function getKeyInfoFromAid(
+    card: ICard,
+    aid: TBinData,
+    callback: (err: any, info: IGPKeyInfo) => void,
+): void;
 /** Gets available GlobalPlatform key data from a given applet and resolves upon completion. Empty aid means default applet will be used. */
-export function getKeyInfoFromAid(card: ICard, aid: TBinData): Promise<IGPKeyInfo>
+export function getKeyInfoFromAid(
+    card: ICard,
+    aid: TBinData,
+): Promise<IGPKeyInfo>;
 /** Gets available GlobalPlatform key data from a given applet and calls provided callback or resolves upon completion. Empty aid means default applet will be used.*/
 export function getKeyInfoFromAid(
     card: ICard,
     aid: TBinData,
-    callback?: ((error: any, info: IGPKeyInfo) => void),
+    callback?: (error: any, info: IGPKeyInfo) => void,
 ): void | Promise<IGPKeyInfo> {
     const importedAid = importBinData(aid);
-    Logger.trace(`Getting GP key info from ${ !importedAid.byteLength ? 'default applet' : `applet "${hexEncode(importedAid)}"` } ...`);
+    Logger.trace(
+        `Getting GP key info from ${!importedAid.byteLength ? 'default applet' : `applet "${hexEncode(importedAid)}"`} ...`,
+    );
     if (typeof callback === 'undefined') {
         return new Promise((resolve, reject) => {
             const callback = (error: any, info: IGPKeyInfo) => {
@@ -71,14 +80,22 @@ export function getKeyInfoFromAid(
     }
 }
 
-function getKeyInfoInternal(card: ICard, aid: Uint8Array, callback: (err: any, info: IGPKeyInfo) => void): void {
+function getKeyInfoInternal(
+    card: ICard,
+    aid: Uint8Array,
+    callback: (err: any, info: IGPKeyInfo) => void,
+): void {
     const keyInfoResult: IGPKeyInfo = {};
     Logger.trace('Selecting applet...');
     card.issueCommand(isoSelect(aid))
         .then((selectResponse) => {
             // parsing response to default select and getting ISD AID
             if (!selectResponse.isOk || selectResponse.dataLength < 1) {
-                return Promise.reject(new Error(`Error response to select: ${selectResponse.toString()}(${selectResponse.meaning})`));
+                return Promise.reject(
+                    new Error(
+                        `Error response to select: ${selectResponse.toString()}(${selectResponse.meaning})`,
+                    ),
+                );
             }
 
             return Promise.resolve();
@@ -88,7 +105,10 @@ function getKeyInfoInternal(card: ICard, aid: Uint8Array, callback: (err: any, i
             return new Promise<void>((resolve) => {
                 card.issueCommand(gpGetData(0x00, 0xe0))
                     .then((getDataResponse) => {
-                        if (!getDataResponse.isOk || getDataResponse.dataLength < 1) {
+                        if (
+                            !getDataResponse.isOk ||
+                            getDataResponse.dataLength < 1
+                        ) {
                             const errMsg = `Error response to GET_DATA (tag 0xE0): ${getDataResponse.toString()}(${getDataResponse.meaning})`;
                             Logger.debug(errMsg);
                             return resolve();
@@ -115,15 +135,15 @@ function getKeyInfoInternal(card: ICard, aid: Uint8Array, callback: (err: any, i
                         const errMsg = `Error getting card data (tag 0xE0): ${error.message}`;
                         Logger.debug(errMsg);
                         return resolve();
-                    })
-            })
+                    });
+            });
         })
         .then(() => {
             callback(undefined, keyInfoResult);
             return Promise.resolve();
         })
         .catch((error: any) => {
-            callback(error, keyInfoResult)
+            callback(error, keyInfoResult);
             return;
-        })
+        });
 }

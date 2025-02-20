@@ -135,9 +135,10 @@ export class BerObject implements IBerObj {
      * @param input - Info object describing BER to be created
      */
     create(input: IBerObjInfo): this {
-        if (typeof input !== 'object'
-            || typeof this['tag'] === 'undefined'
-            || typeof this['value'] === 'undefined'
+        if (
+            typeof input !== 'object' ||
+            typeof this['tag'] === 'undefined' ||
+            typeof this['value'] === 'undefined'
         ) {
             throw new Error('Unknown format of BerObject creation info');
         }
@@ -390,7 +391,8 @@ export class BerObject implements IBerObj {
         if (!isValidBerSearchQuery(query))
             throw new Error('Invalid search query');
 
-        let regexString = query.toLowerCase()
+        let regexString = query
+            .toLowerCase()
             .replace(/\/\*\*/g, '(\\/[0-9a-fA-F]*)*')
             .replace(/\/\*/g, '(\\/[0-9a-fA-F]*)')
             .replace(/(\/)([0-9a-fA-F])/g, '\\/$2');

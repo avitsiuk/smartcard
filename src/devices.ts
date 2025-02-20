@@ -22,7 +22,9 @@ export class PcscDevicesManager implements IDevicesManager {
             throw new Error(errMsg);
         }
         this.pcsc.on('reader', (reader: CardReader) => {
-            Logger.trace(`Emitted PCSCLite "reader" event. Reader name: "${reader.name}"`);
+            Logger.trace(
+                `Emitted PCSCLite "reader" event. Reader name: "${reader.name}"`,
+            );
             const device = new Device(reader);
             this._devices[reader.name] = device;
             this._eventEmitter.emit('device-activated', {
@@ -30,7 +32,9 @@ export class PcscDevicesManager implements IDevicesManager {
                 devices: this.devices,
             });
             reader.on('end', () => {
-                Logger.trace(`Emitted "end" event for device: "${reader.name}"`);
+                Logger.trace(
+                    `Emitted "end" event for device: "${reader.name}"`,
+                );
                 delete this._devices[reader.name];
                 this._eventEmitter.emit('device-deactivated', {
                     device,
@@ -38,7 +42,9 @@ export class PcscDevicesManager implements IDevicesManager {
                 });
             });
             reader.on('error', (error) => {
-                Logger.trace(`Emitted "error" event for device: "${reader.name}"`);
+                Logger.trace(
+                    `Emitted "error" event for device: "${reader.name}"`,
+                );
                 this._eventEmitter.emit('error', { reader, error });
             });
         });

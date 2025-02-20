@@ -1,5 +1,6 @@
 export const DEF_128_KEY = [
-    0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
+    0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b,
+    0x4c, 0x4d, 0x4e, 0x4f,
 ];
 /** Default 16 byte (128 bits) test static keys used in SCP02/SCP03 */
 export const DEF_STATIC_128_KEYS = {
@@ -23,7 +24,7 @@ export enum EIns {
     /** 0x70 */
     MANAGE_CHANNEL = 0x70, // as in iso
     /** 0xA4 */
-    SELECT = 0xA4, // as in iso
+    SELECT = 0xa4, // as in iso
     /** 0xCA */
     GET_DATA = 0xca, // as in iso
     /** 0xD8 */
@@ -47,41 +48,39 @@ export const GP_OID_STR = '1.2.840.114283';
 
 export enum EPrivileges {
     // byte 1
-    SecurityDomain,            // 1-------
-    DAPVerification,           // 11-----0
-    DelegatedManagement,       // 1-1-----
-    CardLock,                  // ---1----
-    CardTerminate,             // ----1---
-    CardReset,                 // -----1--
-    CVMManagement,             // ------1-
-    MandatedDAPVerification,   // 11-----1
+    SecurityDomain, // 1-------
+    DAPVerification, // 11-----0
+    DelegatedManagement, // 1-1-----
+    CardLock, // ---1----
+    CardTerminate, // ----1---
+    CardReset, // -----1--
+    CVMManagement, // ------1-
+    MandatedDAPVerification, // 11-----1
     // byte 2
-    TrustedPath,               // 1-------
-    AuthorizedManagement,      // -1------
-    TokenManagement,           // --1-----
-    GlobalDelete,              // ---1----
-    GlobalLock,                // ----1---
-    GlobalRegistry,            // -----1--
-    FinalApplication,          // ------1-
-    GlobalService,             // -------1
+    TrustedPath, // 1-------
+    AuthorizedManagement, // -1------
+    TokenManagement, // --1-----
+    GlobalDelete, // ---1----
+    GlobalLock, // ----1---
+    GlobalRegistry, // -----1--
+    FinalApplication, // ------1-
+    GlobalService, // -------1
     // byte 3 (----XXXX = RFU)
-    ReceiptGeneration,         // 1-------
+    ReceiptGeneration, // 1-------
     CipheredLoadFileDataBlock, // -1------
-    ContactlessActivation,     // --1-----
+    ContactlessActivation, // --1-----
     ContactlessSelfActivation, // ---1----
 }
 
 export enum ESecurityLevel {
-    Authenticated,    // 10------
+    Authenticated, // 10------
     AnyAuthenticated, // 01------
-    CDecryption,      // ------1-
-    CMac,             // -------1
-    REncryption,      // --1-----
-    RMac,             // ---1----
-    NoSecurityLevel,  // 00000000
+    CDecryption, // ------1-
+    CMac, // -------1
+    REncryption, // --1-----
+    RMac, // ---1----
+    NoSecurityLevel, // 00000000
 }
-
-
 
 /** Executable Load File Life Cycle */
 export enum ELifeCycleExecLoadFile {
@@ -90,27 +89,27 @@ export enum ELifeCycleExecLoadFile {
 
 /** Application Life Cycle  */
 export enum ELifeCycleApp {
-    INSTALLED,    // 00000011
-    SELECTABLE,   // 00000111
+    INSTALLED, // 00000011
+    SELECTABLE, // 00000111
     APP_SPECIFIC, // 0xxxx111
-    LOCKED,       // 1-----11
+    LOCKED, // 1-----11
 }
 
 /** Security Domain Life Cycle */
 export enum ELifeCycleSD {
-    INSTALLED,    // 00000011
-    SELECTABLE,   // 00000111
+    INSTALLED, // 00000011
+    SELECTABLE, // 00000111
     PERSONALIZED, // 00001111
-    LOCKED,       // 1000--11
+    LOCKED, // 1000--11
 }
 
 /** Card Life Cycle  */
 export enum ELifeCycleCard {
-    OP_READY,    // 00000001
+    OP_READY, // 00000001
     INITIALIZED, // 00000111
-    SECURED,     // 00001111
+    SECURED, // 00001111
     CARD_LOCKED, // 01111111
-    TERMINATED,  // 11111111
+    TERMINATED, // 11111111
 }
 
 /** Key Type */
@@ -126,68 +125,68 @@ export enum EKeyType {
     /** HMAC-SHA1-160 – length of HMAC is 160 bits */
     HMAC_SHA1_160 = 0x91,
     /** RSA Public Key - public exponent e component (clear text) */
-    RSA_PUB_EXP_CLEAR = 0xA0,
+    RSA_PUB_EXP_CLEAR = 0xa0,
     /** RSA Public Key - modulus N component (clear text) */
-    RSA_MOD_CLEAR = 0xA1,
+    RSA_MOD_CLEAR = 0xa1,
     /** RSA Private Key - modulus N component */
-    RSA_MOD = 0xA2,
+    RSA_MOD = 0xa2,
     /** RSA Private Key - private exponent d component */
-    RSA_PRIV_EXP = 0xA3,
+    RSA_PRIV_EXP = 0xa3,
 
     /** RSA Private Key - Chinese Remainder P component */
-    RSA_CH_REM_P = 0xA4,
+    RSA_CH_REM_P = 0xa4,
     /** RSA Private Key - Chinese Remainder Q component */
-    RSA_CH_REM_Q = 0xA5,
+    RSA_CH_REM_Q = 0xa5,
     /** RSA Private Key - Chinese Remainder PQ component ( q-1 mod p ) */
-    RSA_CH_REM_PQ = 0xA6,
+    RSA_CH_REM_PQ = 0xa6,
     /** RSA Private Key - Chinese Remainder DP1 component ( d mod (p-1) ) */
-    RSA_CH_REM_DP1 = 0xA7,
+    RSA_CH_REM_DP1 = 0xa7,
     /** RSA Private Key - Chinese Remainder DQ1 component ( d mod (q-1) ) */
-    RSA_CH_REM_DQ1 = 0xA8,
+    RSA_CH_REM_DQ1 = 0xa8,
     /** ECC public key (uncompressed) */
-    ECC_PUB = 0xB0,
+    ECC_PUB = 0xb0,
     /** ECC private key */
-    ECC_PRIV = 0xB1,
+    ECC_PRIV = 0xb1,
     /** ECC field parameter P (field specification) */
-    ECC_PARAM_P = 0xB2,
+    ECC_PARAM_P = 0xb2,
     /** ECC field parameter A (first coefficient) */
-    ECC_PARAM_A = 0xB3,
+    ECC_PARAM_A = 0xb3,
     /** ECC field parameter B (second coefficient) */
-    ECC_PARAM_B = 0xB4,
+    ECC_PARAM_B = 0xb4,
     /** ECC field parameter G (generator, uncompressed) */
-    ECC_PARAM_G = 0xB5,
+    ECC_PARAM_G = 0xb5,
     /** ECC field parameter N (order of generator) */
-    ECC_PARAM_N = 0xB6,
+    ECC_PARAM_N = 0xb6,
     /** ECC field parameter k (cofactor of order of generator) */
-    ECC_PARAM_K = 0xB7,
+    ECC_PARAM_K = 0xb7,
     /** ECC key parameters reference */
-    ECC_KEY_PARAM_REF = 0xF0,
+    ECC_KEY_PARAM_REF = 0xf0,
     /** Extended format (usage defined for specific APDU commands; e.g. PUT KEY) */
-    EXT = 0xFF,
+    EXT = 0xff,
 }
 
 export enum EKeyUsageQualifier {
     // first byte
     /** Verification (DST, CCT, CAT), Encipherment (CT) */
-    VERIFY_ENC = 0x80,         // 1-------
+    VERIFY_ENC = 0x80, // 1-------
     /** Computation (DST, CCT, CAT), Decipherment (CT) */
-    COMPUTE_DEC = 0x40,        // -1------
+    COMPUTE_DEC = 0x40, // -1------
     /** Secure messaging in response data fields (CT, CCT) */
-    SEC_MSG_RSP_DATA = 0x20,   // --1-----
+    SEC_MSG_RSP_DATA = 0x20, // --1-----
     /** Secure messaging in command data fields (CT, CCT) */
-    SEC_MSG_CMD_DATA = 0x10,   // ---1----
+    SEC_MSG_CMD_DATA = 0x10, // ---1----
     /** Confidentiality (CT) */
-    CONF = 0x08,               // ----1---
+    CONF = 0x08, // ----1---
     /** Cryptographic Checksum (CCT) */
-    CHECKSUM = 0x04,           // -----1--
+    CHECKSUM = 0x04, // -----1--
     /** Digital Signature (DST) */
-    SIGN = 0x02,               // ------1-
+    SIGN = 0x02, // ------1-
     /** Cryptographic Authorization (CAT) */
-    AUTHORIZE = 0x01,          // -------1
+    AUTHORIZE = 0x01, // -------1
 
     // second byte. 0x00 if only first is present.
     /** Key Agreement (KAT) */
-    KEY_AGR,                   // 1-------
+    KEY_AGR, // 1-------
 }
 
 export enum EKeyAccess {
@@ -200,6 +199,5 @@ export enum EKeyAccess {
     // 0x03 - 0x1F: RFU
     // 0x20 - 0xFE: Proprietary
     /** Not available */
-    NA = 0xFF,
+    NA = 0xff,
 }
-

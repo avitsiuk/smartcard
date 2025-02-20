@@ -80,12 +80,14 @@ export class CommandApdu {
             throw new Error(
                 `Expected at most ${CommandApdu.MAX_DATA_BYTE_LENGTH + 6} bytes of input data, received: ${inBuffer.byteLength} bytes`,
             );
-            if (inBuffer.byteLength <= 5) { // 4 - only head; 5 - head + Le
+        if (inBuffer.byteLength <= 5) {
+            // 4 - only head; 5 - head + Le
             this.bLength = 5;
         } else {
             const lc = inBuffer[CommandApdu.LC_OFFSET];
             const noLeLength = 5 + lc; // 4(head) + 1(lc) + lc(data)
-            if (noLeLength === 5) // head 00 00; if data field is empty, Lc must be omitted, therefore it cannot be 0
+            if (noLeLength === 5)
+                // head 00 00; if data field is empty, Lc must be omitted, therefore it cannot be 0
                 throw new Error(
                     `Lc value cannot be 0; received data: [${hexEncode(inBuffer)}]`,
                 );

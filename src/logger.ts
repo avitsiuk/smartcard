@@ -16,7 +16,7 @@ function nullableLogFunctionCall(
     ...args: any[]
 ): void {
     if (currLogLevel < minLogLevel) return;
-    if(typeof customLogFun === 'function') {
+    if (typeof customLogFun === 'function') {
         customLogFun(...args);
         return;
     }
@@ -24,7 +24,6 @@ function nullableLogFunctionCall(
 }
 
 export namespace Logger {
-
     /** Default fallback log functions */
     export namespace DefLogFun {
         export function fatal(...args: any[]): void {
@@ -63,10 +62,10 @@ export namespace Logger {
         DEBUG,
         /** Everything */
         TRACE,
-    };
+    }
 
     export function isAtLeastLevel(logLvl: ELogLevel): boolean {
-        return currLogLevel >= logLvl
+        return currLogLevel >= logLvl;
     }
 
     /** Example return: `2024-08-25T13:16:54.158Z` */
@@ -79,11 +78,15 @@ export namespace Logger {
         return Logger;
     }
 
-    export function setFatalLogFun(logFun: TNullableLogFunction): typeof Logger {
+    export function setFatalLogFun(
+        logFun: TNullableLogFunction,
+    ): typeof Logger {
         customFatalLogFun = logFun;
         return Logger;
     }
-    export function setErrorLogFun(logFun: TNullableLogFunction): typeof Logger {
+    export function setErrorLogFun(
+        logFun: TNullableLogFunction,
+    ): typeof Logger {
         customErrorLogFun = logFun;
         return Logger;
     }
@@ -95,34 +98,67 @@ export namespace Logger {
         customInfoLogFun = logFun;
         return Logger;
     }
-    export function setDebugLogFun(logFun: TNullableLogFunction): typeof Logger {
+    export function setDebugLogFun(
+        logFun: TNullableLogFunction,
+    ): typeof Logger {
         customDebugLogFun = logFun;
         return Logger;
     }
-    export function setTraceLogFun(logFun: TNullableLogFunction): typeof Logger {
+    export function setTraceLogFun(
+        logFun: TNullableLogFunction,
+    ): typeof Logger {
         customTraceLogFun = logFun;
         return Logger;
     }
 
     export function fatal(...args: any[]): void {
-        nullableLogFunctionCall(Logger.ELogLevel.FATAL, customFatalLogFun, DefLogFun.fatal, ...args);
+        nullableLogFunctionCall(
+            Logger.ELogLevel.FATAL,
+            customFatalLogFun,
+            DefLogFun.fatal,
+            ...args,
+        );
     }
     export function error(...args: any[]): void {
-        nullableLogFunctionCall(Logger.ELogLevel.ERROR, customErrorLogFun, DefLogFun.error, ...args);
+        nullableLogFunctionCall(
+            Logger.ELogLevel.ERROR,
+            customErrorLogFun,
+            DefLogFun.error,
+            ...args,
+        );
     }
     export function warn(...args: any[]): void {
-        nullableLogFunctionCall(Logger.ELogLevel.WARN, customWarnLogFun, DefLogFun.warn, ...args);
+        nullableLogFunctionCall(
+            Logger.ELogLevel.WARN,
+            customWarnLogFun,
+            DefLogFun.warn,
+            ...args,
+        );
     }
     export function info(...args: any[]): void {
-        nullableLogFunctionCall(Logger.ELogLevel.INFO, customInfoLogFun, DefLogFun.info, ...args);
+        nullableLogFunctionCall(
+            Logger.ELogLevel.INFO,
+            customInfoLogFun,
+            DefLogFun.info,
+            ...args,
+        );
     }
     export function debug(...args: any[]): void {
-        nullableLogFunctionCall(Logger.ELogLevel.DEBUG, customDebugLogFun, DefLogFun.debug, ...args);
+        nullableLogFunctionCall(
+            Logger.ELogLevel.DEBUG,
+            customDebugLogFun,
+            DefLogFun.debug,
+            ...args,
+        );
     }
     export function trace(...args: any[]): void {
-        nullableLogFunctionCall(Logger.ELogLevel.TRACE, customTraceLogFun, DefLogFun.trace, ...args);
+        nullableLogFunctionCall(
+            Logger.ELogLevel.TRACE,
+            customTraceLogFun,
+            DefLogFun.trace,
+            ...args,
+        );
     }
-
 }
 
-export default Logger
+export default Logger;

@@ -6,8 +6,8 @@ import {
     CommandApdu,
     Utils,
     BER,
-    Iso7816,
-    GP,
+    Iso7816Commands,
+    GPCommands,
     ResponseApdu
 } from '../src/index';
 
@@ -75,42 +75,5 @@ pcscDM.on('device-activated', (event => {
 
         let rsp: ResponseApdu;
 
-        try {
-            rsp = await card.issueCommand(Iso7816.commands.select('429999990000'));
-        } catch (error: any) {
-            throw new Error(`Select error: ${error.message}`);
-        }
-
-        console.log('1:');
-        try {
-            rsp = await card.issueCommand(new CommandApdu('80aa1112'));
-        } catch (error: any) {
-            console.log(error.message)
-            // throw new Error(`CMD error: ${error.message}`);
-        }
-
-        console.log('2:');
-        try {
-            rsp = await card.issueCommand(new CommandApdu('80aa111201'));
-        } catch (error: any) {
-            console.log(error.message)
-            // throw new Error(`CMD error: ${error.message}`);
-        }
-
-        // console.log('3:');
-        // try {
-        //     rsp = await card.issueCommand(new CommandApdu('80aa111203f1f2f3'));
-        // } catch (error: any) {
-        //     console.log(error.message)
-        //     // throw new Error(`CMD error: ${error.message}`);
-        // }
-
-        // console.log('4:');
-        // try {
-        //     rsp = await card.issueCommand(new CommandApdu('80aa111203f1f2f300'));
-        // } catch (error: any) {
-        //     console.log(error.message)
-        //     // throw new Error(`CMD error: ${error.message}`);
-        // }
     })
 }));

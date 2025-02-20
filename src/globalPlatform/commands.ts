@@ -8,16 +8,19 @@ import { Tag, IBerObjInfo, BerObject } from '../ber/index';
  * @param highTagByte - high order tag byte (or `0x00`, if tag is 1 byte long)
  * @param lowTagByte - low order tag byte
  * @param data - This shall be empty unless a tag list and/or a MAC is required. For retrieving a list of applications present on the card (P1-P2 set to '0x2F00') a tag list shall be present and coded as '0x5C00'.
-*/
-export function getData(highTagByte: number, lowTagByte: number, data?: TBinData): CommandApdu {
-
+ */
+export function getData(
+    highTagByte: number,
+    lowTagByte: number,
+    data?: TBinData,
+): CommandApdu {
     const cmd = new CommandApdu()
         .setCla(0x80)
         .setIns(gpIns.GET_DATA)
         .setP1(highTagByte)
         .setP2(lowTagByte);
 
-    if(typeof data !== 'undefined') {
+    if (typeof data !== 'undefined') {
         try {
             cmd.setData(data);
         } catch (error: any) {
@@ -31,11 +34,8 @@ export function getData(highTagByte: number, lowTagByte: number, data?: TBinData
 /** The INITIALIZE UPDATE command is used, during explicit initiation of a Secure Channel, to transmit card and session data between the card and the host. This command initiates the initiation of a Secure Channel Session.
  * @param keyVer - defines the Key Version Number within the Security Domain to be used to initiate the Secure Channel Session. If this value is zero, the first available key chosen by the Security Domain will be used.
  * @param hostChallenge - bytes of host challenge. This challenge, chosen by the off-card entity, should be unique to each session.
-*/
-export function initUpdate(
-    keyVer: number,
-    hostChallenge: TBinData,
-) {
+ */
+export function initUpdate(keyVer: number, hostChallenge: TBinData) {
     let cmd = new CommandApdu()
         .setProprietary()
         .setIns(gpIns.INIT_UPDATE)
@@ -46,7 +46,7 @@ export function initUpdate(
     try {
         cmd.setData(hostChallenge);
     } catch (error: any) {
-        throw new Error(`initUpdate command error: ${error}`)
+        throw new Error(`initUpdate command error: ${error}`);
     }
     return cmd;
 }
@@ -61,7 +61,10 @@ export function initUpdate(
  * - `0x11` - R-MAC, C-MAC
  * - `0x13` - R-MAC, C-DECRYPTION, C-MAC
  */
-export function extAuth(hostCryptogram: TBinData, secLvl: 0 | 1 | 3 | 16 | 17 | 19 = 0) {
+export function extAuth(
+    hostCryptogram: TBinData,
+    secLvl: 0 | 1 | 3 | 16 | 17 | 19 = 0,
+) {
     let cmd = new CommandApdu()
         .setProprietary()
         .setSecMgsType(1)
@@ -72,7 +75,7 @@ export function extAuth(hostCryptogram: TBinData, secLvl: 0 | 1 | 3 | 16 | 17 | 
     try {
         cmd.setData(hostCryptogram);
     } catch (error: any) {
-        throw new Error(`extAuth command error: ${error}`)
+        throw new Error(`extAuth command error: ${error}`);
     }
 
     return cmd;

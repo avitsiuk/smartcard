@@ -39,11 +39,10 @@ export interface ISelectOptions {
     response?: 'fci' | 'cp' | 'fmd' | 'le';
 }
 
-
 /** When completed, the command opens the logical channel (see 5.4.2) numbered in CLA (see 5.4.1), if not yet opened, and sets a current structure within that logical channel. Subsequent commands may implicitly refer to the current structure through that logical channel.
  * @param data - Absent or file identifier or path or DF name or tag
  * @param opts - additional command options encoded in P1 and P2
-*/
+ */
 export function select(
     data?: TBinData,
     opts: ISelectOptions = {},
@@ -54,7 +53,7 @@ export function select(
         try {
             cmd.setData(data);
         } catch (error: any) {
-            throw new Error(`select command error: ${error}`)
+            throw new Error(`select command error: ${error}`);
         }
     }
 
@@ -183,7 +182,7 @@ export function verifyRefData(
         try {
             cmd.setData(dataToVerify);
         } catch (error: any) {
-            throw new Error(`verifyRefData command error: ${error}`)
+            throw new Error(`verifyRefData command error: ${error}`);
         }
     }
 
@@ -207,9 +206,7 @@ export function changeRefData(
     }
 
     // 00 - [verification data][new data]; 01 - [new data]
-    const cmd = new CommandApdu()
-        .setIns(isoIns.CHANGE_REF_DATA)
-        .setP1(0x01);
+    const cmd = new CommandApdu().setIns(isoIns.CHANGE_REF_DATA).setP1(0x01);
 
     let p2 = refNum;
 
@@ -222,7 +219,7 @@ export function changeRefData(
     try {
         cmd.setData(data);
     } catch (error: any) {
-        throw new Error(`changeRefData command error: ${error}`)
+        throw new Error(`changeRefData command error: ${error}`);
     }
 
     return cmd;
@@ -242,9 +239,11 @@ export function intAuth(
     isSpecificQualifier: boolean = false,
 ) {
     if (refDataQualifier < 0 || refDataQualifier > 31) {
-        throw new Error('intAuth command error: refDataQualifier must be in the range 0..31');
+        throw new Error(
+            'intAuth command error: refDataQualifier must be in the range 0..31',
+        );
     }
-    let p2 = (refDataQualifier & 0x1f);
+    let p2 = refDataQualifier & 0x1f;
     if (isSpecificQualifier) {
         p2 |= 0x80;
     }
@@ -257,7 +256,7 @@ export function intAuth(
     try {
         cmd.setData(data);
     } catch (error: any) {
-        throw new Error(`intAuth command error: ${error}`)
+        throw new Error(`intAuth command error: ${error}`);
     }
 
     return cmd;
@@ -277,7 +276,7 @@ export function getChallenge(algorithm: number): CommandApdu {
 }
 
 /**
- * External (mutual) authenticate. The command conditionally updates the security status using the result (yes or no) or the computation by the card based on a challenge previously issued by the card (e.g. by a `GET_CHALLENGE` command), a key possibly secret stored in the card and authentication data transmitted by the interface device. In case of `EXTERNAL_AUTHENTICATE` command the response data field is empty.  
+ * External (mutual) authenticate. The command conditionally updates the security status using the result (yes or no) or the computation by the card based on a challenge previously issued by the card (e.g. by a `GET_CHALLENGE` command), a key possibly secret stored in the card and authentication data transmitted by the interface device. In case of `EXTERNAL_AUTHENTICATE` command the response data field is empty.
  * `MUTUAL_AUTHENTICATE` uses the same functionality as `EXTERNAL` and `INTERNAL_AUTHENTICATE` commands. It is based upon a previous `GET_CHALLENGE` command and a secret key stored in the card. In case of `MUTUAL_AUTHENTICATE` command the response data field contains card's authentication-related data.
  * @param data - Authentication-related data (e.g. challenge).
  * @param algorithm - Default: `0`. A byte indicating the algorithm to use: either a cryptographic algorithm or a biometric algorithm (see ISO/IEC 7816-11). '00' means that no information is given.
@@ -291,10 +290,12 @@ export function extMutAuth(
     isSpecificQualifier: boolean = false,
 ) {
     if (refDataQualifier < 0 || refDataQualifier > 31) {
-        throw new Error('intAuth command error: refDataQualifier must be in the range 0..31');
+        throw new Error(
+            'intAuth command error: refDataQualifier must be in the range 0..31',
+        );
     }
 
-    let p2 = (refDataQualifier & 0x1f);
+    let p2 = refDataQualifier & 0x1f;
 
     if (isSpecificQualifier) {
         p2 |= 0x80;
@@ -308,7 +309,7 @@ export function extMutAuth(
     try {
         cmd.setData(data);
     } catch (error: any) {
-        throw new Error(`extMutAuth command error: ${error}`)
+        throw new Error(`extMutAuth command error: ${error}`);
     }
 
     return cmd;
@@ -317,31 +318,32 @@ export function extMutAuth(
 /** Retrievs the value field of a DO belonging to the current template. It may be the content of an EF supporting DOs
  * @param p1 - See 11.4.1.1 of Iso7816-4(2014)
  * @param p2 - See 11.4.1.1 of Iso7816-4(2014)
-*/
+ */
 export function getDataEven(p1: number, p2: number): CommandApdu {
     let cmd = new CommandApdu()
         .setIns(isoIns.GET_DATA_EVEN)
         .setP1(p1)
         .setP2(p2);
 
-        return cmd;
+    return cmd;
 }
 
 /** Retrievs the value field of one or several DOs according to the arguments of the command.
  * @param p1 - See 11.4.1.2 of Iso7816-4(2014)
  * @param p2 - See 11.4.1.2 of Iso7816-4(2014)
  * @param data - Identical to `SELECT_DATA` data field. See 11.4.2.1 (Tables 86 and 87) of Iso7816-4(2014)
-*/
-export function getDataOdd(p1: number, p2: number, data: TBinData): CommandApdu {
-    let cmd = new CommandApdu()
-        .setIns(isoIns.GET_DATA_ODD)
-        .setP1(p1)
-        .setP2(p2);
+ */
+export function getDataOdd(
+    p1: number,
+    p2: number,
+    data: TBinData,
+): CommandApdu {
+    let cmd = new CommandApdu().setIns(isoIns.GET_DATA_ODD).setP1(p1).setP2(p2);
 
     try {
         cmd.setData(data);
     } catch (error: any) {
-        throw new Error(`getDataOdd command error: ${error}`)
+        throw new Error(`getDataOdd command error: ${error}`);
     }
 
     return cmd;
