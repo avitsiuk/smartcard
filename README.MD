@@ -39,7 +39,7 @@ This package expands upon original [`smartcard` library](https://github.com/tomk
 ### PCSC system drivers
 
 Install basic dependencies by running  
-`sudo apt install libpcsclite1 libpcsclite-dev pcscd`  
+`sudo apt install build-essential libpcsclite1 libpcsclite-dev pcscd`  
 and check pcscd service status for any error with  
 `service pcscd status`
 
