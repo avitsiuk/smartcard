@@ -53,8 +53,8 @@ pcscDM.on('device-activated', (event => {
     devices[event.device.name] = {device: event.device, card: null};
     printDeviceList();
 
-    device.on('error', (error) => {
-        console.error(`Device error: ${error.message}`);
+    device.on('error', (event) => {
+        console.error(`Device error: ${event.error.message}`);
     })
 
     device.on('card-removed', (event) => {

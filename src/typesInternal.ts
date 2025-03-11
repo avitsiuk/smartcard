@@ -78,7 +78,10 @@ export interface IDevice {
     ) => void;
     getName: () => string;
     toString: () => string;
-    on(eventName: 'error', eventHandler: (error: any) => void): IDevice;
+    on(
+        eventName: 'error',
+        eventHandler: (event: { error: any; device: IDevice }) => void,
+    ): IDevice;
     on(
         eventName: 'card-inserted',
         eventHandler: (event: { device: IDevice; card: ICard }) => void,
@@ -87,7 +90,10 @@ export interface IDevice {
         eventName: 'card-removed',
         eventHandler: (event: { device: IDevice; card: ICard }) => void,
     ): IDevice;
-    once(eventName: 'error', eventHandler: (error: any) => void): IDevice;
+    once(
+        eventName: 'error',
+        eventHandler: (event: { error: any; device: IDevice }) => void,
+    ): IDevice;
     once(
         eventName: 'card-inserted',
         eventHandler: (event: { device: IDevice; card: ICard }) => void,

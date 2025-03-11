@@ -44,9 +44,9 @@ export class Device implements IDevice {
 
         const cardInserted = (reader: CardReader, status: Status) => {
             Logger.trace(`Card inserted into "${this.name}"`);
-            reader.connect({ share_mode: 2 }, (err, protocol) => {
-                if (err) {
-                    this._eventEmitter.emit('error', err);
+            reader.connect({ share_mode: 2 }, (error, protocol) => {
+                if (error) {
+                    this._eventEmitter.emit('error', { error, device: this });
                 } else {
                     try {
                         this.card = new Card(
@@ -57,10 +57,10 @@ export class Device implements IDevice {
                             protocol,
                         );
                     } catch (error: any) {
-                        this._eventEmitter.emit(
-                            'error',
-                            new Error(`Card error: ${error.message}`),
-                        );
+                        this._eventEmitter.emit('error', {
+                            error: new Error(`Card error: ${error.message}`),
+                            device: this,
+                        });
                         return;
                     }
                     this._eventEmitter.emit('card-inserted', {
@@ -74,9 +74,9 @@ export class Device implements IDevice {
         const cardRemoved = (reader: CardReader) => {
             Logger.trace(`Card removed from "${this.name}"`);
             const name = reader.name;
-            reader.disconnect(reader.SCARD_LEAVE_CARD, (err) => {
-                if (err) {
-                    this._eventEmitter.emit('error', err);
+            reader.disconnect(reader.SCARD_LEAVE_CARD, (error) => {
+                if (error) {
+                    this._eventEmitter.emit('error', { error, device: this });
                 } else {
                     this._eventEmitter.emit('card-removed', {
                         device: this,
@@ -140,7 +140,10 @@ export class Device implements IDevice {
         return `${this.getName()}`;
     }
 
-    on(eventName: 'error', eventHandler: (error: any) => void): Device;
+    on(
+        eventName: 'error',
+        eventHandler: (event: { error: any; device: Device }) => void,
+    ): Device;
     on(
         eventName: 'card-inserted',
         eventHandler: (event: { device: Device; card: Card }) => void,
@@ -157,7 +160,10 @@ export class Device implements IDevice {
         return this;
     }
 
-    once(eventName: 'error', eventHandler: (error: any) => void): Device;
+    once(
+        eventName: 'error',
+        eventHandler: (event: { error: any; device: Device }) => void,
+    ): Device;
     once(
         eventName: 'card-inserted',
         eventHandler: (event: { device: Device; card: Card }) => void,
