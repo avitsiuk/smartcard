@@ -495,6 +495,24 @@ export class Card implements ICard {
         this._eventEmitter.once(eventName, eventHandler);
         return this;
     }
+
+    removeListener(
+        eventName: TCardEventName,
+        eventHandler: (...args: any[]) => void,
+    ): void {
+        this._eventEmitter.removeListener(eventName, eventHandler);
+    }
+
+    off(
+        eventName: TCardEventName,
+        eventHandler: (...args: any[]) => void,
+    ): void {
+        this.removeListener(eventName, eventHandler);
+    }
+
+    removeAllListeners(eventName: TCardEventName): void {
+        this._eventEmitter.removeAllListeners(eventName);
+    }
 }
 
 export default Card;

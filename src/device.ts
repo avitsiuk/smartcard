@@ -173,6 +173,24 @@ export class Device implements IDevice {
         this._eventEmitter.on(eventName, eventHandler);
         return this;
     }
+
+    removeListener(
+        eventName: TDeviceEventName,
+        eventHandler: (...args: any[]) => void,
+    ): void {
+        this._eventEmitter.removeListener(eventName, eventHandler);
+    }
+
+    off(
+        eventName: TDeviceEventName,
+        eventHandler: (...args: any[]) => void,
+    ): void {
+        this.removeListener(eventName, eventHandler);
+    }
+
+    removeAllListeners(eventName: TDeviceEventName): void {
+        this._eventEmitter.removeAllListeners(eventName);
+    }
 }
 
 export default Device;

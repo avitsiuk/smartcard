@@ -24,4 +24,4 @@ export * as GPUtils from './globalPlatform/utils';
 export { SCP11 } from './globalPlatform/sesureSession/scp11';
 
 export { Device } from './device';
-export { PcscDevicesManager } from './devices';
+export { PcscDevicesManager } from './deviceMgr';

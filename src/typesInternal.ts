@@ -51,6 +51,16 @@ export interface ICard {
             response: ResponseApdu;
         }) => void,
     ): ICard;
+
+    removeListener(
+        eventName: TCardEventName,
+        eventHandler: (...args: any[]) => void,
+    ): void;
+    off(
+        eventName: TCardEventName,
+        eventHandler: (...args: any[]) => void,
+    ): void;
+    removeAllListeners(eventName: TCardEventName): void;
 }
 
 export type TDeviceEventName = 'error' | 'card-inserted' | 'card-removed';
@@ -86,6 +96,16 @@ export interface IDevice {
         eventName: 'card-removed',
         eventHandler: (event: { name: string; card: ICard }) => void,
     ): IDevice;
+
+    removeListener(
+        eventName: TDeviceEventName,
+        eventHandler: (...args: any[]) => void,
+    ): void;
+    off(
+        eventName: TDeviceEventName,
+        eventHandler: (...args: any[]) => void,
+    ): void;
+    removeAllListeners(eventName: TDeviceEventName): void;
 }
 
 export type TDevicesManagerEventName =
@@ -148,4 +168,14 @@ export interface IDevicesManager {
             devManager: IDevicesManager;
         }) => void,
     ): IDevicesManager;
+
+    removeListener(
+        eventName: TDevicesManagerEventName,
+        eventHandler: (...args: any[]) => void,
+    ): void;
+    off(
+        eventName: TDevicesManagerEventName,
+        eventHandler: (...args: any[]) => void,
+    ): void;
+    removeAllListeners(eventName: TDevicesManagerEventName): void;
 }

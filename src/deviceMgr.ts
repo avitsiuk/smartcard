@@ -150,6 +150,24 @@ export class PcscDevicesManager implements IDevicesManager {
         this._eventEmitter.on(eventName, eventHandler);
         return this;
     }
+
+    removeListener(
+        eventName: TDevicesManagerEventName,
+        eventHandler: (...args: any[]) => void,
+    ): void {
+        this._eventEmitter.removeListener(eventName, eventHandler);
+    }
+
+    off(
+        eventName: TDevicesManagerEventName,
+        eventHandler: (...args: any[]) => void,
+    ): void {
+        this.removeListener(eventName, eventHandler);
+    }
+
+    removeAllListeners(eventName: TDevicesManagerEventName): void {
+        this._eventEmitter.removeAllListeners(eventName);
+    }
 }
 
 export default PcscDevicesManager;
