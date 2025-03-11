@@ -79,7 +79,7 @@ export class Device implements IDevice {
                     this._eventEmitter.emit('error', err);
                 } else {
                     this._eventEmitter.emit('card-removed', {
-                        name,
+                        device: this,
                         card: this.card,
                     });
                     this.card = null;
@@ -147,7 +147,7 @@ export class Device implements IDevice {
     ): Device;
     on(
         eventName: 'card-removed',
-        eventHandler: (event: { name: string; card: Card }) => void,
+        eventHandler: (event: { device: Device; card: Card }) => void,
     ): Device;
     on(
         eventName: TDeviceEventName,
@@ -164,7 +164,7 @@ export class Device implements IDevice {
     ): Device;
     once(
         eventName: 'card-removed',
-        eventHandler: (event: { name: string; card: Card }) => void,
+        eventHandler: (event: { device: Device; card: Card }) => void,
     ): Device;
     once(
         eventName: TDeviceEventName,

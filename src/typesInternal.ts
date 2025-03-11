@@ -85,7 +85,7 @@ export interface IDevice {
     ): IDevice;
     on(
         eventName: 'card-removed',
-        eventHandler: (event: { name: string; card: ICard }) => void,
+        eventHandler: (event: { device: IDevice; card: ICard }) => void,
     ): IDevice;
     once(eventName: 'error', eventHandler: (error: any) => void): IDevice;
     once(
@@ -94,7 +94,7 @@ export interface IDevice {
     ): IDevice;
     once(
         eventName: 'card-removed',
-        eventHandler: (event: { name: string; card: ICard }) => void,
+        eventHandler: (event: { device: IDevice; card: ICard }) => void,
     ): IDevice;
 
     removeListener(
