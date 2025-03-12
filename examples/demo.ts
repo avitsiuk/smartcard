@@ -12,7 +12,7 @@ import {
     ResponseApdu,
 } from '../src/index';
 
-Logger.setLogLevel(Logger.ELogLevel.INFO); // NONE(0), FATAL(1), ERROR(2), WARN(3), INFO(4), DEBUG(5), TRACE(6)
+Logger.setLogLevel(Logger.ELogLevel.DEBUG); // NONE(0), FATAL(1), ERROR(2), WARN(3), INFO(4), DEBUG(5), TRACE(6)
 
 const devices: {[key: string]: {device: Device, card: Card | null}} = {};
 
@@ -69,12 +69,12 @@ pcscDM.on('device-activated', (event => {
         const card = event.card;
 
         // logging card communications
-        // event.card.on('command-issued', (event) => {
-        //     console.log(`[${device.name}][CMD]<< [${event.command}]`)
-        // })
-        // event.card.on('response-received', (event) => {
-        //     console.log(`[${device.name}][RSP]>> [${Utils.hexEncode([...event.response.data])}][${Utils.hexEncode([...event.response.status])}](${event.response.meaning})`)
-        // })
+        event.card.on('command-issued', (event) => {
+            console.log(`[${event.device.name}][CMD]<< [${event.command}]`)
+        })
+        event.card.on('response-received', (event) => {
+            console.log(`[${event.device.name}][RSP]>> [${Utils.hexEncode([...event.response.data])}][${Utils.hexEncode([...event.response.status])}](${event.response.meaning})`)
+        })
 
         console.log(Utils.decodeAtr(card.atr));
 

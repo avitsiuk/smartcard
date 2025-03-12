@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.5] - 2025-03-12
+
+### Changed
+
+- Event handler signature for events 'command-issued' on Card class from `(event: { card: ICard; command: CommandApdu }) => void` to `(event: { device: IDevice; card: ICard; command: CommandApdu }) => void`.
+- Event handler signature for events 'response-received' on Card class from `(event: { card: ICard; command: CommandApdu; response: ResponseApdu; }) => void` to `(event: { device: IDevice; card: ICard; command: CommandApdu; response: ResponseApdu; }) => void`.
+
 ## [0.9.4] - 2025-03-11
 
 ### Changed

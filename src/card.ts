@@ -192,6 +192,7 @@ export class Card implements ICard {
                     return;
                 }
                 this._eventEmitter.emit('response-received', {
+                    device: this._device,
                     card: this,
                     command: cmd,
                     response,
@@ -238,6 +239,7 @@ export class Card implements ICard {
                     return;
                 }
                 this._eventEmitter.emit('response-received', {
+                    device: this._device,
                     card: this,
                     command: cmd,
                     response,
@@ -304,6 +306,7 @@ export class Card implements ICard {
                             doCommandTransform = true;
                         }
                         this._eventEmitter.emit('command-issued', {
+                            device: this._device,
                             card: this,
                             command: cmdToResend,
                         });
@@ -353,6 +356,7 @@ export class Card implements ICard {
         }
 
         this._eventEmitter.emit('command-issued', {
+            device: this._device,
             card: this,
             command: tCmd,
         });
@@ -464,11 +468,16 @@ export class Card implements ICard {
 
     on(
         eventName: 'command-issued',
-        eventHandler: (event: { card: Card; command: CommandApdu }) => void,
+        eventHandler: (event: {
+            device: IDevice;
+            card: Card;
+            command: CommandApdu;
+        }) => void,
     ): Card;
     on(
         eventName: 'response-received',
         eventHandler: (event: {
+            device: IDevice;
             card: Card;
             command: CommandApdu;
             response: ResponseApdu;
@@ -481,11 +490,16 @@ export class Card implements ICard {
 
     once(
         eventName: 'command-issued',
-        eventHandler: (event: { card: Card; command: CommandApdu }) => void,
+        eventHandler: (event: {
+            device: IDevice;
+            card: Card;
+            command: CommandApdu;
+        }) => void,
     ): Card;
     once(
         eventName: 'response-received',
         eventHandler: (event: {
+            device: IDevice;
             card: Card;
             command: CommandApdu;
             response: ResponseApdu;

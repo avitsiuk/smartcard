@@ -25,12 +25,17 @@ export interface ICard {
     /** Emitted upon submitting command to card. Event's command apdu is the actual command submitted to the card, after transformer has been applied (if any) */
     on(
         eventName: 'command-issued',
-        eventHandler: (event: { card: ICard; command: CommandApdu }) => void,
+        eventHandler: (event: {
+            device: IDevice;
+            card: ICard;
+            command: CommandApdu;
+        }) => void,
     ): ICard;
     /** Emitted upon receiving response from card. Event's response apdu is the actual response received from the card, before transformation (if any) */
     on(
         eventName: 'response-received',
         eventHandler: (event: {
+            device: IDevice;
             card: ICard;
             command: CommandApdu;
             response: ResponseApdu;
@@ -40,12 +45,17 @@ export interface ICard {
     /** Emitted upon submitting command to card. Event's command apdu is the actual command submitted to the card, after transformer has been applied (if any) */
     once(
         eventName: 'command-issued',
-        eventHandler: (event: { card: ICard; command: CommandApdu }) => void,
+        eventHandler: (event: {
+            device: IDevice;
+            card: ICard;
+            command: CommandApdu;
+        }) => void,
     ): ICard;
     /** Emitted upon receiving response from card. Event's response apdu is the actual response received from the card, before transformation (if any) */
     once(
         eventName: 'response-received',
         eventHandler: (event: {
+            device: IDevice;
             card: ICard;
             command: CommandApdu;
             response: ResponseApdu;
