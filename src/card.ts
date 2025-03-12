@@ -11,6 +11,7 @@ import CommandApdu from './commandApdu';
 import ResponseApdu from './responseApdu';
 import { type ICard, type IDevice, type TCardEventName } from './typesInternal';
 import { getResponse as isoGetResponse } from './iso7816/commands';
+import { type Device } from './device';
 
 /** Response APDU max size(256 for data + 2 for status) */
 const maxTrResLen = 258;
@@ -469,7 +470,7 @@ export class Card implements ICard {
     on(
         eventName: 'command-issued',
         eventHandler: (event: {
-            device: IDevice;
+            device: Device;
             card: Card;
             command: CommandApdu;
         }) => void,
@@ -477,7 +478,7 @@ export class Card implements ICard {
     on(
         eventName: 'response-received',
         eventHandler: (event: {
-            device: IDevice;
+            device: Device;
             card: Card;
             command: CommandApdu;
             response: ResponseApdu;
@@ -491,7 +492,7 @@ export class Card implements ICard {
     once(
         eventName: 'command-issued',
         eventHandler: (event: {
-            device: IDevice;
+            device: Device;
             card: Card;
             command: CommandApdu;
         }) => void,
@@ -499,7 +500,7 @@ export class Card implements ICard {
     once(
         eventName: 'response-received',
         eventHandler: (event: {
-            device: IDevice;
+            device: Device;
             card: Card;
             command: CommandApdu;
             response: ResponseApdu;

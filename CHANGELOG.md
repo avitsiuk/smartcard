@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.6] - 2025-03-12
+
+### Fixed
+
+- Types in event handlers for 'command-issued' and 'response-received' handlers
+
 ## [0.9.5] - 2025-03-12
 
 ### Changed
