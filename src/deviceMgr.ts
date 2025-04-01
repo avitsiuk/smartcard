@@ -41,12 +41,6 @@ export class PcscDevicesManager implements IDevicesManager {
                     devices: this.devices,
                 });
             });
-            reader.on('error', (error) => {
-                Logger.trace(
-                    `Emitted "error" event for device: "${reader.name}"`,
-                );
-                this._eventEmitter.emit('error', { reader, error });
-            });
         });
 
         this.pcsc.on('error', (error) => {

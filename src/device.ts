@@ -87,6 +87,11 @@ export class Device implements IDevice {
             });
         };
 
+        reader.on('error', (error) => {
+            Logger.trace(`Emitted "error" event for device: "${reader.name}"`);
+            this._eventEmitter.emit('error', { error, device: this });
+        });
+
         reader.on('status', (status: Status) => {
             Logger.trace(
                 `Device status change. Status: ${status.state}. Device: "${this.name}"`,

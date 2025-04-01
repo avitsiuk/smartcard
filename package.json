@@ -1,6 +1,6 @@
 {
     "name": "smartcardx",
-    "version": "0.9.6",
+    "version": "0.9.7",
     "description": "Backend library for communication with smartcards using system native PCSC interface. Plain Iso7816 + EMV + GlobalPlatform functionality.",
     "keywords": [
         "pcsc",
@@ -63,7 +63,8 @@
         "format:fix": "prettier --write \"{src,example}/**/*.{js,ts}\"",
         "docs": "typedoc --options typedoc.json",
         "prepack": "npm run test-cov && npm run build && npm run format:check",
-        "demo": "npx ts-node --project tsconfig.cjs.json ./examples/demo.ts"
+        "demo": "npx ts-node --project tsconfig.cjs.json ./examples/demo.ts",
+        "demo2": "npx ts-node --project tsconfig.cjs.json ./examples/demo2.ts"
     },
     "dependencies": {
         "pcsclite": "1.0.1"
