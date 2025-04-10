@@ -276,7 +276,10 @@ export class SCP11 {
         // total data len must be multiple of BLOCK_BYTE_LEN
         const missingPaddingBytes =
             BLOCK_BYTE_LEN - (cmd.getLc() % BLOCK_BYTE_LEN);
-        let dataToEncrypt = Buffer.alloc(cmd.getLc() + missingPaddingBytes, 0);
+        const dataToEncrypt = Buffer.alloc(
+            cmd.getLc() + missingPaddingBytes,
+            0,
+        );
         dataToEncrypt.set(cmd.getData());
         dataToEncrypt[cmd.getLc()] = 0x80;
 
@@ -350,7 +353,7 @@ export class SCP11 {
         // total data len must be multiple of BLOCK_BYTE_LEN
         const missingPaddingBytes =
             BLOCK_BYTE_LEN - ((5 + origData.length) % BLOCK_BYTE_LEN);
-        let dataToAuthenticate = Buffer.alloc(
+        const dataToAuthenticate = Buffer.alloc(
             BLOCK_BYTE_LEN + 5 + origData.length + missingPaddingBytes,
             0,
         );
@@ -416,7 +419,7 @@ export class SCP11 {
         const expectedMac = rsp.data.slice(plainDataLen);
 
         // [macChainingValue]+[data without mac]+[status]+[80]+[00...00]
-        let authDataLen = BLOCK_BYTE_LEN + plainDataLen + 2;
+        const authDataLen = BLOCK_BYTE_LEN + plainDataLen + 2;
         const missingPaddingBytes =
             BLOCK_BYTE_LEN - (authDataLen % BLOCK_BYTE_LEN);
         const dataToAuthenticate = Buffer.alloc(
@@ -683,7 +686,6 @@ export class SCP11 {
         Logger.trace('Importing certificate authority public ECDSA key');
         let pubKey: crypto.KeyObject;
         try {
-            const importedBin = importBinData(caEcdsaPublicKey);
             pubKey = crypto.createPublicKey({
                 key: Buffer.from(importBinData(caEcdsaPublicKey)),
                 format: 'der',
@@ -717,11 +719,11 @@ export class SCP11 {
     get caEcdsaPublicKey(): Uint8Array | null {
         return this._validCAEcdsaPublicKey
             ? new Uint8Array(
-                  this._validCAEcdsaPublicKey.export({
-                      format: 'der',
-                      type: 'spki',
-                  }),
-              )
+                this._validCAEcdsaPublicKey.export({
+                    format: 'der',
+                    type: 'spki',
+                }),
+            )
             : null;
     }
 
@@ -798,9 +800,9 @@ export class SCP11 {
     }
 
     /* Start SCP11a session */
-    mutAuth(keyVer: number = 0, keyId: number = 0): Promise<ResponseApdu> {
+    mutAuth(_keyVer: number = 0, _keyId: number = 0): Promise<ResponseApdu> {
         Logger.trace(`Initializing secure session ...`);
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             this.resetSession();
             if (!this._validCAEcdsaPublicKey) {
                 return reject('Missing certificate authority public ECDSA key');
@@ -818,7 +820,6 @@ export class SCP11 {
                     'Missing off-card entity static public ECDH key certificate',
                 );
             }
-            const currAutoGetResponse = this._card.autoGetResponse;
             this._card.setAutoGetResponse(true);
             Logger.trace(`Getting card static public key ...`);
             this._card
@@ -925,8 +926,6 @@ export class SCP11 {
                                         'Submitting MUTUAL_AUTHENTICATE command',
                                     );
                                     Logger.trace(mutAuthCmd.toString());
-
-                                    /////////////////////////////////////
 
                                     this._card
                                         .issueCommand(mutAuthCmd)
@@ -1062,8 +1061,6 @@ export class SCP11 {
                                         .catch((e) => {
                                             return reject(e);
                                         });
-
-                                    /////////////////////////////////////
                                 })
                                 .catch((e: any) => {
                                     return reject(e);

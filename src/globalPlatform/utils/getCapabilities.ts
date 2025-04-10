@@ -78,7 +78,7 @@ function decodePrivileges(pByteArray: Uint8Array): TPrivilegesList {
             `Unexpected privileges byte array length. Expected: 3 bytes, received: ${pByteArray} bytes.`,
         );
     }
-    let result: any = {};
+    const result: any = {};
     // console.log(privEncRules["0"]);
     for (const pName in privEncRules) {
         const pRules = privEncRules[pName];
@@ -216,13 +216,14 @@ function getCapabilitiesInternal(
                                     switch (
                                         cardCapDataElem.tag.hex.toLowerCase()
                                     ) {
-                                        case 'a0': //SCP info
+                                        case 'a0': {
+                                            //SCP info
                                             let scpType: string | undefined;
                                             let scpOptions: number[] = [];
                                             let scp03Keys:
                                                 | {
-                                                      [key in TSCP03KeyType]: boolean;
-                                                  }
+                                                    [key in TSCP03KeyType]: boolean;
+                                                }
                                                 | undefined;
                                             let scp81Tls: Uint8Array =
                                                 new Uint8Array(0);
@@ -332,6 +333,7 @@ function getCapabilitiesInternal(
                                                         scp81MaxPSKLen;
                                             }
                                             break;
+                                        }
                                         case '81':
                                             cardCapsResult.ssdPrivileges =
                                                 decodePrivileges(

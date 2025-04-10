@@ -3,13 +3,13 @@ import {
     PcscDevicesManager,
     Device,
     Card,
-    CommandApdu,
+    // CommandApdu,
     Utils,
     BER,
     Iso7816Commands,
-    GPCommands,
+    // GPCommands,
     GPUtils,
-    ResponseApdu,
+    // ResponseApdu,
 } from '../src/index';
 
 Logger.setLogLevel(Logger.ELogLevel.DEBUG); // NONE(0), FATAL(1), ERROR(2), WARN(3), INFO(4), DEBUG(5), TRACE(6)
@@ -57,7 +57,7 @@ pcscDM.on('device-activated', (event => {
         console.error(`Device error: ${event.error.message}`);
     })
 
-    device.on('card-removed', (event) => {
+    device.on('card-removed', (_event) => {
         devices[device.name].card = null;
         printDeviceList();
     })
@@ -92,7 +92,7 @@ pcscDM.on('device-activated', (event => {
                 let berObj: BER.BerObject | undefined;
                 try {
                     berObj = BER.BerObject.parse(selectResponse.data);
-                } catch (error) {
+                } catch (_error) {
                     // decode error, probably not BER
                 }
 

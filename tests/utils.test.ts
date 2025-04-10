@@ -57,10 +57,9 @@ describe('utils', () => {
         expect(normalizeHexString('x0ff00ff')).toEqual('x0ff00ff');
     })
     test('hexDecode()', () => {
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{hexDecode(true)}).toThrow(new TypeError('Not a string'));
 
-        //@ts-ignore
         expect(()=>{hexDecode('a string')}).toThrow(new TypeError('Not a hex string: [a string]'));
         expect(hexDecode('')).toEqual(new Uint8Array(0));
         expect(hexDecode('f')).toEqual(new Uint8Array([15]));
@@ -69,7 +68,7 @@ describe('utils', () => {
         expect(hexDecode('0X0f')).toEqual(new Uint8Array([15]));
         expect(hexDecode('0X0F')).toEqual(new Uint8Array([15]));
 
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{hexDecode('0102', true)}).toThrow(new Error('outBuffer must be an ArrayBuffer or ArrayBufferView'));
         const ab = new ArrayBuffer(5);
         expect(()=>{hexDecode('0102', ab, -1)}).toThrow(new Error('outOffset value out of bounds; value: -1'));
@@ -99,9 +98,9 @@ describe('utils', () => {
     })
     test('importBinData()', () => {
 
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{importBinData(true)}).toThrow(new Error('Accepted binary data types: hex string, number[], ArrayBuffer, ArrayBufferView'));
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{importBinData(['asd'])}).toThrow(new Error('Data is not a numeric array'));
 
         let ab = new ArrayBuffer(5);
@@ -158,7 +157,7 @@ describe('utils', () => {
         expect(new Uint8Array(ab)).toEqual(new Uint8Array([0,10,10,1,0]));
         expect(u8).toEqual(new Uint8Array([10,10,1]));
 
-        let testData = new Uint8Array(2);
+        const testData = new Uint8Array(2);
 
         testData.set([2,3]);
         expect(importBinData(testData, u8, 1)).toEqual(new Uint8Array([2, 3]));
@@ -180,14 +179,14 @@ describe('utils', () => {
         expect(result).toEqual(testData);
         testData.set([6,6]);
         expect(result).toEqual(testData);
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{importBinData(testData, true)}).toThrow(new Error('outBuffer must be an ArrayBuffer or ArrayBufferView'));
         expect(()=>{importBinData(testData, new Uint8Array(5), -1)}).toThrow(new Error('outOffset value out of bounds; value: -1'));
         expect(()=>{importBinData(testData, new Uint8Array(5), 10)}).toThrow(new Error('outOffset value out of bounds; value: 10'));
         expect(()=>{importBinData(testData, new Uint8Array(5), 4)}).toThrow(new Error('Not enough space in the provided outBuffer'));
     })
     test('hexEncode()', () => {
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{hexEncode(['str'])}).toThrow(new TypeError('Error hexencoding value: Data is not a numeric array'));
         expect(hexEncode([0,1,2,3, 255])).toEqual('00010203ff');
     })
@@ -238,7 +237,7 @@ describe('utils', () => {
         expect(isBinData(Buffer.from([]))).toBeTruthy();
     })
     test('decodeAtr()', () => {
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{decodeAtr(true)}).toThrow(new Error('Error decoding ATR: Error importing ATR binary: Accepted binary data types: hex string, number[], ArrayBuffer, ArrayBufferView'));
         expect(()=>{decodeAtr('')}).toThrow(new Error('Error decoding ATR: ATR length expected to be at least 2 bytes. Received: 0'));
         expect(()=>{decodeAtr('0001')}).toThrow(new Error('Error decoding ATR: invalid TS byte value'));

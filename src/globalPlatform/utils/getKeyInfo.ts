@@ -1,10 +1,10 @@
 import Logger from '../../logger';
 import { ICard } from '../../typesInternal';
-import { BerObject, Asn1Utils } from '../../ber';
+import { BerObject } from '../../ber';
 import { select as isoSelect } from '../../iso7816/commands';
 import { getData as gpGetData } from './../commands';
-import { GP_OID_STR, EKeyType } from './../values';
-import { hexDecode, hexEncode, importBinData, TBinData } from '../../utils';
+import { EKeyType } from './../values';
+import { hexEncode, importBinData, TBinData } from '../../utils';
 
 export interface IGPKeyInfo {
     [key: number]: {

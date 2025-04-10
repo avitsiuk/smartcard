@@ -36,7 +36,7 @@ export function getData(
  * @param hostChallenge - bytes of host challenge. This challenge, chosen by the off-card entity, should be unique to each session.
  */
 export function initUpdate(keyVer: number, hostChallenge: TBinData) {
-    let cmd = new CommandApdu()
+    const cmd = new CommandApdu()
         .setProprietary()
         .setIns(gpIns.INIT_UPDATE)
         .setP1(keyVer)
@@ -65,7 +65,7 @@ export function extAuth(
     hostCryptogram: TBinData,
     secLvl: 0 | 1 | 3 | 16 | 17 | 19 = 0,
 ) {
-    let cmd = new CommandApdu()
+    const cmd = new CommandApdu()
         .setProprietary()
         .setSecMgsType(1)
         .setIns(isoIns.EXT_MUT_AUTH)
@@ -104,7 +104,7 @@ export function intAuth(
         throw new Error(`Key error: ${error.message}`);
     }
 
-    let berObjInfo: IBerObjInfo = {
+    const berObjInfo: IBerObjInfo = {
         tag: Tag.root,
         value: [
             {
@@ -127,7 +127,7 @@ export function intAuth(
         });
     }
 
-    let cmd = new CommandApdu()
+    const cmd = new CommandApdu()
         .setProprietary()
         .setType(4)
         .setSecMgsType(0)
@@ -161,7 +161,7 @@ export function mutAuth(
         throw new Error(`Key error: ${error.message}`);
     }
 
-    let berObjInfo: IBerObjInfo = {
+    const berObjInfo: IBerObjInfo = {
         tag: Tag.root,
         value: [
             {
@@ -184,7 +184,7 @@ export function mutAuth(
         });
     }
 
-    let cmd = new CommandApdu()
+    const cmd = new CommandApdu()
         .setProprietary()
         .setType(4)
         .setSecMgsType(0)

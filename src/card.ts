@@ -184,7 +184,7 @@ export class Card implements ICard {
                 let response: ResponseApdu;
                 try {
                     response = new ResponseApdu(respBuffer);
-                } catch (error) {
+                } catch (_error: any) {
                     this._isBusy = false;
                     callback(
                         new Error(`Error response: [${hexEncode(respBuffer)}]`),
@@ -231,7 +231,7 @@ export class Card implements ICard {
                 let response: ResponseApdu;
                 try {
                     response = new ResponseApdu(respBuffer);
-                } catch (error) {
+                } catch (_error) {
                     this._isBusy = false;
                     callback(
                         new Error(`Error response: [${hexEncode(respBuffer)}]`),

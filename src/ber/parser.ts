@@ -38,7 +38,9 @@ export function parseBer(input: TBinData, startOffset: number = 0): IBerObj[] {
         try {
             parsedTag = Tag.from(inBuffer, currInOffset);
         } catch (error: any) {
-            throw error;
+            throw new Error(
+                `Error creating Tag object from data: ${error.message}`,
+            );
         }
 
         currInOffset += parsedTag.byteLength;
@@ -77,16 +79,12 @@ export function parseBer(input: TBinData, startOffset: number = 0): IBerObj[] {
             if (parsedLen.value === 0) {
                 parsedValue = new Uint8Array(0);
             } else {
-                try {
-                    parsedValue = parseBer(
-                        inBuffer.subarray(
-                            currInOffset,
-                            currInOffset + parsedLen.value,
-                        ),
-                    );
-                } catch (error: any) {
-                    throw error;
-                }
+                parsedValue = parseBer(
+                    inBuffer.subarray(
+                        currInOffset,
+                        currInOffset + parsedLen.value,
+                    ),
+                );
             }
         }
 

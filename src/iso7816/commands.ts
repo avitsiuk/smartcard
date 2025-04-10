@@ -248,7 +248,7 @@ export function intAuth(
         p2 |= 0x80;
     }
 
-    let cmd = new CommandApdu()
+    const cmd = new CommandApdu()
         .setIns(isoIns.INT_AUTH)
         .setP1(algorithm)
         .setP2(p2);
@@ -267,7 +267,7 @@ export function intAuth(
  * @param algorithm - Default: `0`. A byte indicating the algorithm to use: either a cryptographic algorithm or a biometric algorithm (see ISO/IEC 7816-11). '00' means that no information is given.
  */
 export function getChallenge(algorithm: number): CommandApdu {
-    let cmd = new CommandApdu()
+    const cmd = new CommandApdu()
         .setIns(isoIns.GET_CHALLENGE)
         .setP1(algorithm)
         .setP2(0);
@@ -301,7 +301,7 @@ export function extMutAuth(
         p2 |= 0x80;
     }
 
-    let cmd = new CommandApdu()
+    const cmd = new CommandApdu()
         .setIns(isoIns.EXT_MUT_AUTH)
         .setP1(algorithm)
         .setP2(p2);
@@ -320,7 +320,7 @@ export function extMutAuth(
  * @param p2 - See 11.4.1.1 of Iso7816-4(2014)
  */
 export function getDataEven(p1: number, p2: number): CommandApdu {
-    let cmd = new CommandApdu()
+    const cmd = new CommandApdu()
         .setIns(isoIns.GET_DATA_EVEN)
         .setP1(p1)
         .setP2(p2);
@@ -338,7 +338,10 @@ export function getDataOdd(
     p2: number,
     data: TBinData,
 ): CommandApdu {
-    let cmd = new CommandApdu().setIns(isoIns.GET_DATA_ODD).setP1(p1).setP2(p2);
+    const cmd = new CommandApdu()
+        .setIns(isoIns.GET_DATA_ODD)
+        .setP1(p1)
+        .setP2(p2);
 
     try {
         cmd.setData(data);

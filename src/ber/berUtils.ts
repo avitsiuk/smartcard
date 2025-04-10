@@ -252,7 +252,7 @@ export function parseLength(
     if (inBuffer.byteLength < extraLenBytes + 1)
         throw new Error('Unexpected end of data');
 
-    let tempVal = new Uint32Array([0]);
+    const tempVal = new Uint32Array([0]);
 
     for (let i = 1; i <= extraLenBytes; i++) {
         tempVal[0] |= inBuffer[i] << (8 * (extraLenBytes - i));

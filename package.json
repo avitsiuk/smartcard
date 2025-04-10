@@ -58,11 +58,12 @@
         "build:cjs": "tsc -p tsconfig.cjs.json",
         "build:esm": "tsc -p tsconfig.esm.json",
         "fix:esm": "./scripts/fix-esm.sh",
-        "build": "npm run build:clean && concurrently \"npm:build:cjs\" \"npm:build:esm\" && npm run fix:esm",
-        "format:check": "prettier --check \"{src,example}/**/*.{js,ts}\"",
-        "format:fix": "prettier --write \"{src,example}/**/*.{js,ts}\"",
+        "fix:rm-eslint-comments": "./scripts/rm-eslint-comments.sh",
+        "build": "npm run build:clean && concurrently \"npm:build:cjs\" \"npm:build:esm\" && npm run fix:esm && npm run fix:rm-eslint-comments",
+        "lint": "eslint .",
+        "lint:fix": "eslint --fix .",
         "docs": "typedoc --options typedoc.json",
-        "prepack": "npm run test-cov && npm run build && npm run format:check",
+        "prepack": "npm run lint && npm run test && npm run build",
         "demo": "npx ts-node --project tsconfig.cjs.json ./examples/demo.ts",
         "demo2": "npx ts-node --project tsconfig.cjs.json ./examples/demo2.ts"
     },
@@ -70,17 +71,22 @@
         "pcsclite": "1.0.1"
     },
     "devDependencies": {
+        "@eslint/js": "^9.24.0",
+        "@stylistic/eslint-plugin-ts": "^4.2.0",
         "@types/jest": "^29.5.12",
-        "@types/md5": "^2.3.5",
+        "@typescript-eslint/eslint-plugin": "^8.29.1",
+        "@typescript-eslint/parser": "^8.29.1",
         "concurrently": "^9.0.0",
+        "eslint": "^9.24.0",
+        "eslint-plugin-jest": "^28.11.0",
         "jest": "^29.7.0",
-        "prettier": "^3.2.2",
         "rimraf": "^6.0.1",
         "ts-jest": "^29.2.5",
         "ts-node": "^10.9.1",
-        "typedoc": "^0.27.6",
-        "typedoc-plugin-missing-exports": "^3.0.0",
+        "typedoc": "^0.28.2",
+        "typedoc-plugin-missing-exports": "^4.0.0",
         "typedoc-plugin-not-exported": "^0.1.6",
-        "typescript": "^5.0.4"
+        "typescript": "^5.0.4",
+        "typescript-eslint": "^8.29.1"
     }
 }

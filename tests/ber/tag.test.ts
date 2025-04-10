@@ -4,15 +4,13 @@ import {
 
 describe('BER TAG', () => {
     test('class', () => {
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{Tag.from([0,1,2,'ff'])}).toThrow(new Error('Error parsing tag: Data is not a numeric array'));
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{Tag.from({class: -1, isConstructed: false, number: 0})}).toThrow(new Error('Error parsing tag: Accepted binary data types: hex string, number[], ArrayBuffer, ArrayBufferView'));
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{Tag.from({class: 0, isConstructed: 'asd', number: 0})}).toThrow(new Error('Error parsing tag: Accepted binary data types: hex string, number[], ArrayBuffer, ArrayBufferView'));
-        //@ts-ignore
         expect(()=>{Tag.from({class: 0, isConstructed: false, number: -1})}).toThrow(new Error('Tag number value not allowed. Min: 0, max: 2097151, received: -1'));
-        //@ts-ignore
         expect(()=>{Tag.from({class: 0, isConstructed: false, number: Number.MAX_SAFE_INTEGER})}).toThrow(new Error(`Error parsing tag: Number exceeds max allowed value of ${Tag.MAX_NUMBER}; received: ${Number.MAX_SAFE_INTEGER}`));
         expect(()=>{Tag.from('ff')}).toThrow(new Error('Error parsing tag: Unexpected end of data'));
 
@@ -116,7 +114,7 @@ describe('BER TAG', () => {
         expect(tag.isPrimitive).toEqual(false);
         expect(tag.number).toEqual(1);
 
-        let tag2 = Tag.from(tag);
+        const tag2 = Tag.from(tag);
         expect(tag2.toByteArray()).toEqual(new Uint8Array([97]));
         expect(tag2.byteLength).toEqual(1);
         expect(tag2.toString()).toEqual('61');

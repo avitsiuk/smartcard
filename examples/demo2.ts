@@ -1,4 +1,4 @@
-import * as v8 from 'node:v8';
+// import * as v8 from 'node:v8';
 import {
     Logger,
     PcscDevicesManager,
@@ -46,13 +46,13 @@ function devRemovedHandler(event: {device: Device, devManager: PcscDevicesManage
     console.log(`==> Device removed: ${event.device.name}`);
 }
 
-function sleep(time: number): Promise<void> {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            return resolve();
-        }, time);
-    })
-}
+// function sleep(time: number): Promise<void> {
+//     return new Promise((resolve) => {
+//         setTimeout(() => {
+//             return resolve();
+//         }, time);
+//     })
+// }
 
 async function main() {
     reinitDevMgr();

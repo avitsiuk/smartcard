@@ -5,7 +5,7 @@ import {
 
 describe('ResponseApdu', () => {
     test('ctor', () => {
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{ResponseApdu.from([1,2,3,4,'string'])}).toThrow(new Error('Could not create ResponseAPDU from provided data: Data is not a numeric array'));
         expect(()=>{ResponseApdu.from('')}).toThrow(new Error('Expected at least 2 bytes of input data, received: 0 bytes'));
         expect(()=>{ResponseApdu.from([])}).toThrow(new Error('Expected at least 2 bytes of input data, received: 0 bytes'));
@@ -47,7 +47,7 @@ describe('ResponseApdu', () => {
         expect(rsp.meaning).toEqual('Normal processing');
     })
     test('accessors and methods', () => {
-        let testData = Buffer.from('0102039000', 'hex');
+        const testData = Buffer.from('0102039000', 'hex');
         let rsp = ResponseApdu.from(testData);
 
         rsp.clear()
@@ -57,7 +57,7 @@ describe('ResponseApdu', () => {
         expect(rsp.status).toEqual(new Uint8Array([0,0]));
         expect(rsp.toString()).toEqual('0000');
 
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(() => {rsp.data = true}).toThrow(new Error('Could not set ResponseAPDU data field: Accepted binary data types: hex string, number[], ArrayBuffer, ArrayBufferView'));
         rsp.data = '8182838485';
         expect(rsp.byteLength).toEqual(7);
@@ -72,7 +72,7 @@ describe('ResponseApdu', () => {
         expect(rsp.status).toEqual(new Uint8Array([0,0]));
         expect(rsp.toString()).toEqual('0000');
 
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(() => {rsp.status = true}).toThrow(new Error('Could not set ResponseAPDU status field: Accepted binary data types: hex string, number[], ArrayBuffer, ArrayBufferView'));
         expect(() => {rsp.status = '010203'}).toThrow(new Error('Could not set ResponseAPDU status field. Expected exactly 2 bytes of data; Received: 3 bytes'));
         rsp.data = '8182838485';
@@ -92,7 +92,7 @@ describe('ResponseApdu', () => {
         rsp = new ResponseApdu();
         rsp.data = new Uint8Array(3);
         rsp.status = '9000';
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{rsp.addData(true)}).toThrow(new Error('Could not add data to ResponseAPDU: Accepted binary data types: hex string, number[], ArrayBuffer, ArrayBufferView'));
         rsp.addData([1,2]);
         expect(rsp.byteLength).toEqual(7);

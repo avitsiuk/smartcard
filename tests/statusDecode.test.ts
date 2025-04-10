@@ -2,7 +2,7 @@ import statusDecode from '../src/statusDecode';
 
 describe('statusDecode', () => {
     test('Decode error', () => {
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(statusDecode(['asd'])).toEqual('Could not decode status: Data is not a numeric array');
     })
     test('Unknown', () => {

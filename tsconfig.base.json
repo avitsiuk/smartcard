@@ -3,7 +3,7 @@
     "include": ["./src/index.ts"],
     "exclude": ["node_modules", "docs", "example", "lib"],
     "compilerOptions": {
-        "target": "ES2017",
+        "target": "ES2015",
         "moduleResolution": "node",
         "esModuleInterop": true,
 

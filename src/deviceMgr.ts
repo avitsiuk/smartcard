@@ -61,14 +61,14 @@ export class PcscDevicesManager implements IDevicesManager {
 
     /** Resolved upon `device-activated` event */
     onActivated(): Promise<{ device: Device; devManager: IDevicesManager }> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.once('device-activated', (event) => resolve(event));
         });
     }
 
     /** Resolved upon `device-deactivated` event */
     onDeactivated(): Promise<{ device: Device; devManager: IDevicesManager }> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.once('device-deactivated', (event) => resolve(event));
         });
     }

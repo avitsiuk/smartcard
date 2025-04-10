@@ -11,11 +11,10 @@ import {
 
 describe('BER utils', () => {
     test('parseTag()', () => {
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{parseTag(['asd'])}).toThrow(new Error('Error decoding binary data: Data is not a numeric array'));
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{parseTag(['asd'])}).toThrow(new Error('Error decoding binary data: Data is not a numeric array'));
-        //@ts-ignore
         expect(()=>{parseTag([0], -1)}).toThrow(new Error('Start offset "-1" is outside of byte array range. Received byte array length: 1'));
         expect(()=>{parseTag([0], 3)}).toThrow(new Error('Start offset "3" is outside of byte array range. Received byte array length: 1'));
         expect(()=>{parseTag('ff')}).toThrow(new Error('Unexpected end of data'));
@@ -36,17 +35,16 @@ describe('BER utils', () => {
         expect(parseTag(new Uint8Array([0xe1, 0x01, 0x00]))).toEqual({class: 3, isConstructed: true, number: 1, byteLength: 1});
     })
     test('serializeTag()', () => {
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{serializeTag()}).toThrow(new Error('Unknown tag info format'));
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{serializeTag({class: 5, isConstructed: false, number: 0})}).toThrow(new Error('Unknown tag info format'));
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{serializeTag({class: 'asdasd', isConstructed: false, number: 0})}).toThrow(new Error('Unknown tag info format'));
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{serializeTag({class: 1, isConstructed: 5, number: 0})}).toThrow(new Error('Unknown tag info format'));
-        //@ts-ignore
         expect(()=>{serializeTag({class: 1, isConstructed: true, number: Number.MAX_SAFE_INTEGER})}).toThrow(new Error(`Tag number value not allowed. Min: 0, max: ${MAX_TAG_SAFE_NUMBER}, received: ${Number.MAX_SAFE_INTEGER}`));
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{serializeTag({class: 0, isConstructed: false, number: 0}, true)}).toThrow(new Error('outBuffer must be an ArrayBuffer or ArrayBufferView'));
 
         expect(()=>{serializeTag({class: 0, isConstructed: false, number: MAX_TAG_SAFE_NUMBER}, new Uint8Array(2))}).toThrow(new Error('Not enough space in the provided outBuffer'));
@@ -84,9 +82,8 @@ describe('BER utils', () => {
         expect(new Uint8Array(outBuffer)).toEqual(new Uint8Array([0, 0x1f, 0x7f, 0, 0]));
     })
     test('parseLength()', () => {
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{parseLength(true)}).toThrow(new Error('Error decoding binary data: Accepted binary data types: hex string, number[], ArrayBuffer, ArrayBufferView'));
-        //@ts-ignore
         expect(()=>{parseLength('')}).toThrow(new Error('Unexpected end of data'));
         expect(()=>{parseLength('00', -1)}).toThrow(new Error('Start offset "-1" is outside of byte array range. Received byte array length: 1'));
         expect(()=>{parseLength('00', 10)}).toThrow(new Error('Start offset "10" is outside of byte array range. Received byte array length: 1'));
@@ -106,7 +103,7 @@ describe('BER utils', () => {
         expect(parseLength('84FFFFFFFF')).toEqual({value: 4294967295, byteLength: 5});
     })
     test('serializeTag()', () => {
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{serializeLength(0, true)}).toThrow(new Error('outBuffer must be an ArrayBuffer or ArrayBufferView'));
         expect(()=>{serializeLength(-2)}).toThrow(new Error(`Length value not allowed. Min: 0, max: ${MAX_LEN_SAFE_NUMBER}, received: -2`));
         expect(()=>{serializeLength(MAX_LEN_SAFE_NUMBER + 1)}).toThrow(new Error(`Length value not allowed. Min: 0, max: ${MAX_LEN_SAFE_NUMBER}, received: ${MAX_LEN_SAFE_NUMBER + 1}`));

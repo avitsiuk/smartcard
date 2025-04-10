@@ -356,8 +356,8 @@ function getInfoInternal(
                                                         if (
                                                             typeof cardInfoResult
                                                                 .scp[
-                                                                scpName
-                                                            ] === 'undefined'
+                                                                    scpName
+                                                                ] === 'undefined'
                                                         )
                                                             cardInfoResult.scp[
                                                                 scpName
@@ -426,7 +426,7 @@ function getInfoInternal(
         })
         .then(() => {
             Logger.trace('Reading IIN...');
-            return new Promise<void>((resolve, reject) => {
+            return new Promise<void>((resolve) => {
                 card.issueCommand(gpGetData(0x00, 0x42))
                     .then((getDataResponse) => {
                         if (
@@ -481,7 +481,7 @@ function getInfoInternal(
         })
         .then(() => {
             Logger.trace('Reading CIN...');
-            return new Promise<void>((resolve, reject) => {
+            return new Promise<void>((resolve) => {
                 card.issueCommand(gpGetData(0x00, 0x45))
                     .then((getDataResponse) => {
                         if (

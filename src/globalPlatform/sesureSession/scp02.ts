@@ -3,7 +3,7 @@ import { hexEncode } from '../../utils';
 import ResponseApdu, { assertResponseIsOk } from '../../responseApdu';
 import CommandApdu from '../../commandApdu';
 import * as GPCommands from '../commands';
-import * as IsoCommands from '../../iso7816/commands';
+// import * as IsoCommands from '../../iso7816/commands';
 import Card from '../../card';
 
 /*
@@ -41,7 +41,7 @@ function tDesCbcEnc(data: Buffer, key: Buffer, iv: Buffer): Buffer {
     return Buffer.concat([cipher.update(data), cipher.final()]);
 }
 
-function tDesCbcDec(data: Buffer, key: Buffer, iv: Buffer): Buffer {
+function _tDesCbcDec(data: Buffer, key: Buffer, iv: Buffer): Buffer {
     const decipher = crypto
         .createDecipheriv('des-ede3-cbc', key, iv)
         .setAutoPadding(false);
@@ -171,7 +171,7 @@ function addMac(
     // data: [header] + [Lc(data+mac)] + [data] + [8000...]
     // total data len must be multiple of 8
     const paddingLength = 8 - ((newHeader.length + 1 + origData.length) % 8);
-    let dataToAuthenticate = Buffer.alloc(
+    const dataToAuthenticate = Buffer.alloc(
         newHeader.length + 1 + origData.length + paddingLength,
         0,
     );
@@ -380,7 +380,7 @@ export default class SCP02 {
     }
 
     /** Sends INITIALIZE_UPDATE and EXTERNAL AUTHENTICATE commands. Sets session as active on success */
-    initAndAuth(keyVer: number = 0, keyId: number = 0): Promise<ResponseApdu> {
+    initAndAuth(keyVer: number = 0, _keyId: number = 0): Promise<ResponseApdu> {
         return new Promise((resolve, reject) => {
             if (typeof this.staticKeys === 'undefined') {
                 return reject(

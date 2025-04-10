@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ESM_DIR="../lib/mjs"
+LIB_DIR="../lib"
 
 ##########################################################
 fix_paths() {
@@ -29,23 +29,36 @@ fix_paths() {
         ARG_PATH=$ABS_PATH
     }
 
-    absolutize ESM_DIR
+    absolutize LIB_DIR
 }
 fix_paths
 ##########################################################
 
-echo "Fixing ESM files..."
+echo "Removing eslint comments..."
 
-if ! [ -d "$ESM_DIR" ]; then
-    echo "ESM files directory not found: \"$ESM_DIR\""
+if ! [ -d "$LIB_DIR" ]; then
+    echo "Library files directory not found: \"$LIB_DIR\""
     exit 1
 fi
 
-for file in $(find "${ESM_DIR}" -name '*.js' ); do
-    # fing all <from './somepath'> or <from '../somepath'> and appends .mjs to the path
-    sed -i "s/from *'\(\.\{1,2\}\/[^']*\)'/from '\\1\.mjs'/g" "$file"
-    # rename the file to .mjs
-    mv "${file}" "${file%.js}.mjs"
+for file in $(find "${LIB_DIR}" -type f \( -name '*.js' -o -name '*.mjs' \)); do
+    # Remove any single-line ESLint comments like:
+    # // eslint-disable
+    # // eslint-disable-line
+    # // eslint-disable-next-line
+    # // eslint-enable
+    # // eslint <rule>: <value>
+    sed -i '/\/\/.*eslint.*/d' "$file"
+
+    # Remove block comments that affect ESLint:
+    # /* eslint-disable */
+    # /* eslint-enable */
+    # /* eslint <rule>: <value> */
+    sed -i '/\/\*.*eslint.*\*\//d' "$file"
+
+    # Optionally remove multi-line block comments with eslint configs
+    # (start of block)
+    sed -i '/\/\*.*eslint.*/{:a;N;/\*\//!ba;d}' "$file"
 done
 
 echo "Done"

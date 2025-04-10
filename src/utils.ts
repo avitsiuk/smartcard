@@ -242,7 +242,7 @@ export interface IAtrInfo {
             /** If false, ETU duration is Fi/Di clock cycles as defined by TA1 (or its default value if absent). If true, indicates that the ETU duration is implicitly known (by some convention, or setting of the reader; EMV prescribes that such card shall be rejected) */
             implicitETUDuration: boolean;
         };
-        /** Specific to T after T from 0 to 14 in TD(i–1). For T = 1: maximum block size the card can receive. Encodes IFSC. If T = 15: supported supply voltages and low power modes */
+        /** Specific to T after T from 0 to 14 in TD(i–1). For T = 1: maximum block size the card can receive. Encodes IFSC. If T = 15: supported supply voltages and low power modes */
         3?: number;
     };
     TB: {
@@ -277,7 +277,7 @@ export interface IAtrInfo {
         [key: number]: {
             /** presence of at most 4 other interface bytes: TD(i+1), TC(i+1), TB(i+1), TA(i+1) */
             Y: string;
-            /** Integer in range [0..15]. T = 15 is invalid in TD(1), and in other TDi qualifies the following TA(i+1) TB(i+1), TC(i+1), TD(i+1) (if present) as global interface bytes. Other values of T indicate a protocol that the card is willing to use, and that TA(i+1) TB(i+1), TC(i+1), TD(i+1) (if present) are specific interface bytes applying only to that protocol. T = 0 is a character-oriented protocol. T = 1 is a block-oriented protocol. T in the range [3..14] is RFU */
+            /** Integer in range [0..15]. T = 15 is invalid in TD(1), and in other TDi qualifies the following TA(i+1) TB(i+1), TC(i+1), TD(i+1) (if present) as global interface bytes. Other values of T indicate a protocol that the card is willing to use, and that TA(i+1) TB(i+1), TC(i+1), TD(i+1) (if present) are specific interface bytes applying only to that protocol. T = 0 is a character-oriented protocol. T = 1 is a block-oriented protocol. T in the range [3..14] is RFU */
             T: number;
         };
     };

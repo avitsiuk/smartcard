@@ -73,7 +73,6 @@ export class Device implements IDevice {
 
         const cardRemoved = (reader: CardReader) => {
             Logger.trace(`Card removed from "${this.name}"`);
-            const name = reader.name;
             reader.disconnect(reader.SCARD_LEAVE_CARD, (error) => {
                 if (error) {
                     this._eventEmitter.emit('error', { error, device: this });

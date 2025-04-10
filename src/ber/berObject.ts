@@ -313,8 +313,8 @@ export class BerObject implements IBerObj {
             printFn
                 ? printFn
                 : (line, _lvl, _obj) => {
-                      console.log(line);
-                  };
+                    console.log(line);
+                };
         this.printInternal(f, spaces, 0);
     }
 
@@ -383,9 +383,10 @@ export class BerObject implements IBerObj {
      * - Search query MUST start with `/` and end with a value.
      * - A value can be either `*`, `**` or a hex string. Values cannot be mixed.
      * @returns - array of all found tags matching the criteria
-     * @example // Note that the following examples have spaces in their search queries. This is to prevent the premature closing of JSDoc comments. No spaces are alowed in search queries.
-     * @example BerObject.parse('hexString').search('/** /06') // this will return every single OID primitive object in this BER on any level
-     * @example BerObject.parse('hexString').search('/* /06') // this will return every single OID primitive object in this BER, but ONLY 2 levels deep
+     * @example
+     * // Note that the following examples have spaces in their search queries. This is to prevent the premature closing of JSDoc comments. No spaces are alowed in search queries.
+     * BerObject.parse('hexString').search('/** /06') // this will return every single OID primitive object in this BER on any level
+     * BerObject.parse('hexString').search('/* /06') // this will return every single OID primitive object in this BER, but ONLY 2 levels deep
      */
     search(query: string): BerObject[] {
         if (!isValidBerSearchQuery(query))
@@ -410,9 +411,10 @@ export class BerObject implements IBerObj {
         const result: BerObject[] = new Array<BerObject>(matchingPaths.length);
 
         matchingPaths.reduce((_, currentPath, currentPathIdx) => {
+            // eslint-disable-next-line @typescript-eslint/no-this-alias
             let currBerObj: BerObject = this;
             currentPath.indexes.reduce(
-                (_, currPathNodeValue, currPathNodeIdx) => {
+                (_, currPathNodeValue, _currPathNodeIdx) => {
                     if (
                         !currBerObj.isConstructed() ||
                         currBerObj.value.length <= currPathNodeValue

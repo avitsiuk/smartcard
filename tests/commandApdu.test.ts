@@ -2,7 +2,7 @@ import CommandAPDU from '../src/commandApdu';
 
 describe('CommandAPDU', () => {
     test('ctor', () => {
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{CommandAPDU.from([1,2,3,4,'string'])}).toThrow(new Error('Could not create CommandAPDU from provided data: Data is not a numeric array'));
         expect(()=>{CommandAPDU.from('')}).toThrow(new Error('Expected at least 4 bytes of input data, received: 0 bytes'));
         expect(()=>{CommandAPDU.from([])}).toThrow(new Error('Expected at least 4 bytes of input data, received: 0 bytes'));
@@ -69,7 +69,7 @@ describe('CommandAPDU', () => {
     })
 
     test('accessors', () => {
-        let testData: number[] = [0,0,0,0,3,1,2,3,255];
+        const testData: number[] = [0,0,0,0,3,1,2,3,255];
         let cmd = CommandAPDU.from(testData);
 
         expect(cmd.byteLength).toEqual(9);
@@ -102,7 +102,7 @@ describe('CommandAPDU', () => {
         expect(cmd.lc).toEqual(3);
 
         expect(()=>{cmd.data = new Uint8Array(CommandAPDU.MAX_DATA_BYTE_LENGTH + 1)}).toThrow()
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{cmd.data = true}).toThrow()
 
         cmd.data = '';
@@ -132,7 +132,7 @@ describe('CommandAPDU', () => {
         expect(cmd.toString()).toEqual('818283840a7071727374757677787900');
     })
     test('cla byte helpers', () => {
-        let cmd = new CommandAPDU();
+        const cmd = new CommandAPDU();
 
         // proprietary/interindustry
         expect(cmd.cla).toEqual(0x00);
@@ -147,7 +147,7 @@ describe('CommandAPDU', () => {
         // type4/type16
         expect(cmd.cla).toEqual(0x00);
         expect(cmd.type).toEqual(4);
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{cmd.setType(3)}).toThrow();
         cmd.setType(16);
         expect(cmd.cla).toEqual(0x40);
@@ -157,7 +157,7 @@ describe('CommandAPDU', () => {
         expect(cmd.cla).toEqual(0x9f);
         expect(cmd.type).toEqual(4);
         cmd.cla = 0x20;
-        expect(()=>{cmd.type}).toThrow();
+        expect(()=>{const _t = cmd.type}).toThrow();
 
         // chaining
         cmd.cla = 0x00;
@@ -169,7 +169,7 @@ describe('CommandAPDU', () => {
 
         // logical channels
         cmd.cla = 0x20;
-        expect(()=>{cmd.logicalChannel}).toThrow();
+        expect(()=>{const _t = cmd.logicalChannel}).toThrow();
         // type4
         cmd.cla = 0x01;
         cmd.setLogicalChannel(0);
@@ -242,7 +242,7 @@ describe('CommandAPDU', () => {
         // secure message
         // type4
         cmd.cla = 0x00;
-        //@ts-ignore
+        //@ts-expect-error: Testing type checking
         expect(()=>{cmd.setSecMgsType(5)}).toThrow();
         cmd.setSecMgsType(3);
         expect(cmd.cla).toEqual(0x0c);
@@ -260,7 +260,6 @@ describe('CommandAPDU', () => {
         cmd.cla = 0x00;
         cmd.setType(16);
         expect(cmd.secMgsType).toEqual(0);
-        //@ts-ignore
         expect(()=>{cmd.setSecMgsType(3)}).toThrow();
         expect(()=>{cmd.setSecMgsType(2)}).toThrow();
         cmd.setSecMgsType(1);
