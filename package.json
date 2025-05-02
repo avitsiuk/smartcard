@@ -65,7 +65,9 @@
         "docs": "typedoc --options typedoc.json",
         "prepack": "npm run lint && npm run test && npm run build",
         "demo": "npx ts-node --project tsconfig.cjs.json ./examples/demo.ts",
-        "demo2": "npx ts-node --project tsconfig.cjs.json ./examples/demo2.ts"
+        "demo2": "npx ts-node --project tsconfig.cjs.json ./examples/demo2.ts",
+        "demo3": "npx ts-node --project tsconfig.cjs.json ./examples/demo3.ts",
+        "t": "npx ts-node --project tsconfig.cjs.json ./examples/t.ts"
     },
     "dependencies": {
         "pcsclite": "1.0.1"

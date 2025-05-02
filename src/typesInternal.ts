@@ -4,6 +4,9 @@ import CommandApdu from './commandApdu';
 import ResponseApdu from './responseApdu';
 
 export type TCardEventName = 'command-issued' | 'response-received';
+export type TIssueCommandFunction = (commandApdu: TBinData | CommandApdu, callback?: (err: any, response: ResponseApdu) => void) => void | Promise<ResponseApdu>;
+export type TIssueCommandCallbackFunction = (commandApdu: TBinData | CommandApdu, callback: (err: any, response: ResponseApdu) => void) => void;
+export type TIssueCommandPromiseFunction = (commandApdu: TBinData | CommandApdu) => Promise<ResponseApdu>;
 
 export interface ICard {
     atr: Uint8Array;

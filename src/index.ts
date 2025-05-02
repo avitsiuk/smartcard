@@ -21,6 +21,10 @@ export * as GPCommands from './globalPlatform/commands';
 /** GlobalPlatform utility functions */
 export * as GPUtils from './globalPlatform/utils';
 
+export * as EmvValues from './emv/values';
+export * as EmvCommands from './emv/commands';
+export * as EmvUtils from './emv/utils';
+
 export { SCP11 } from './globalPlatform/sesureSession/scp11';
 
 export { Device } from './device';
