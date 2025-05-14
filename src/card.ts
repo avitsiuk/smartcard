@@ -404,16 +404,11 @@ export class Card implements ICard {
 
         if (cmd.byteLength < 4) {
             checkingErr = new Error(
-                `Command too short; Min: 5 bytes; Received: ${cmd.byteLength} bytes; cmd: [${cmd.toString()}]`,
+                `Command too short; Min: 4 bytes; Received: ${cmd.byteLength} bytes; cmd: [${cmd.toString()}]`,
             );
-        } else if (cmd.byteLength === 6) {
-            if (cmd.getLc() === 0) {
-                checkingErr = new Error(
-                    `If Lc = 0, it should be omitted; cmd: [${cmd.toString()}]`,
-                );
-            }
+        } else if (cmd.byteLength === 6 && cmd.getLc() === 0) {
             checkingErr = new Error(
-                `Lc or Data missing; cmd: [${cmd.toString()}]`,
+                `If Lc = 0, it should be omitted; cmd: [${cmd.toString()}]`,
             );
         } else if (cmd.data.byteLength > CommandApdu.MAX_DATA_BYTE_LENGTH) {
             checkingErr = new Error(
