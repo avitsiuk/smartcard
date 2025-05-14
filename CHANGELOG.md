@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Mechanism for automatic Le append when missing in CommandAPDU (enabled by default)
+- Mechanism for automatic Le append when missing in CommandAPDU (disabled by default)
 
 ## [0.9.7] - 2025-04-01
 

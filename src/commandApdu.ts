@@ -26,7 +26,7 @@ if (bytes.len == 4) {
 */
 
 export class CommandApdu {
-    private static AUTO_LE = true;
+    private static AUTO_LE = false;
     static readonly CLA_OFFSET = 0;
     static readonly INS_OFFSET = 1;
     static readonly P1_OFFSET = 2;
