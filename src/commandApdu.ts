@@ -26,6 +26,7 @@ if (bytes.len == 4) {
 */
 
 export class CommandApdu {
+    private static AUTO_LE = true;
     static readonly CLA_OFFSET = 0;
     static readonly INS_OFFSET = 1;
     static readonly P1_OFFSET = 2;
@@ -33,6 +34,15 @@ export class CommandApdu {
     static readonly LC_OFFSET = 4;
     static readonly DATA_OFFSET = 5;
     static readonly MAX_DATA_BYTE_LENGTH = 255;
+
+    /** If true(default), `0x00` Le value is appended automatically if missing in the gived data*/
+    static set autoLe(value: boolean) {
+        CommandApdu.AUTO_LE = value;
+    }
+
+    static get autoLe(): boolean {
+        return CommandApdu.AUTO_LE;
+    }
 
     // header(4) + lc(1) + data + le(1)
     private byteArray: Uint8Array = new Uint8Array(
@@ -74,30 +84,34 @@ export class CommandApdu {
         }
         if (inBuffer.byteLength < 4)
             throw new Error(
-                `Expected at least 4 bytes of input data, received: ${inBuffer.byteLength} bytes`,
+                `Expected at least 4 bytes of input data(header: CLA, INS, P1, P2), received: ${inBuffer.byteLength} bytes`,
             );
         if (inBuffer.byteLength > CommandApdu.MAX_DATA_BYTE_LENGTH + 6)
             throw new Error(
                 `Expected at most ${CommandApdu.MAX_DATA_BYTE_LENGTH + 6} bytes of input data, received: ${inBuffer.byteLength} bytes`,
             );
-        if (inBuffer.byteLength <= 5) {
-            // 4 - only head; 5 - head + Le
-            this.bLength = 5;
+        if (inBuffer.byteLength <= 5) { // 4 - only head; 5 - head + Le (Case1 or Case2)
+            this.bLength = inBuffer.byteLength;
         } else {
+            // if APDU is more than 5 bytes long, then there necessarily is an Lc value
             const lc = inBuffer[CommandApdu.LC_OFFSET];
-            const noLeLength = 5 + lc; // 4(head) + 1(lc) + lc(data)
-            if (noLeLength === 5)
+            const expectedNoLeLength = 5 + lc; // head(4) + lc(1) + data(lc)
+            if (expectedNoLeLength === 5) // e.g. XX XX XX XX 00 XX..
                 // head 00 00; if data field is empty, Lc must be omitted, therefore it cannot be 0
                 throw new Error(
                     `Lc value cannot be 0; received data: [${hexEncode(inBuffer)}]`,
                 );
-            if (inBuffer.byteLength === noLeLength) {
-                this.bLength = inBuffer.byteLength + 1;
-            } else if (inBuffer.byteLength === noLeLength + 1) {
+
+            
+            if (inBuffer.byteLength === expectedNoLeLength) { // passed data have no Le
+                // add Le automatically, if necessary.
+                this.bLength = CommandApdu.autoLe ? inBuffer.byteLength + 1 : inBuffer.byteLength ;
+            } else if (inBuffer.byteLength === expectedNoLeLength + 1) {
+                // Le has been passed with the command data
                 this.bLength = inBuffer.byteLength;
             } else {
                 throw new Error(
-                    `Based on input Lc value(${lc}), input data was expected to be ${noLeLength}(no Le value) or ${noLeLength + 1}(with Le value) bytes long. Received ${inBuffer.byteLength} bytes: [${hexEncode(inBuffer)}]`,
+                    `Based on input Lc value(${lc}), input data was expected to be ${expectedNoLeLength}(no Le value) or ${expectedNoLeLength + 1}(with Le value) bytes long. Received ${inBuffer.byteLength} bytes: [${hexEncode(inBuffer)}]`,
                 );
             }
         }
