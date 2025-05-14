@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.8] - not released
+
+### Fixed
+
+- card.issueCommand checks
+
+### Added
+
+- Mechanism for automatic Le append when missing in CommandAPDU (enabled by default)
+
 ## [0.9.7] - 2025-04-01
 
 ### Fixed
