@@ -47,8 +47,11 @@ export class CommandApdu {
     // header(4) + lc(1) + data + le(1)
     private byteArray: Uint8Array = new Uint8Array(
         CommandApdu.MAX_DATA_BYTE_LENGTH + 6,
-    ); // header(4) + Lc(1) + data + Le(1)
-    private bLength = 5;
+    );
+
+    private bLength = 4;
+
+    private hasLe = true;
 
     /** Creates a new CommandAPDU from input.
      * @param data - optional; binary data or another ComandAPDU. All data is copied.
@@ -90,7 +93,15 @@ export class CommandApdu {
             throw new Error(
                 `Expected at most ${CommandApdu.MAX_DATA_BYTE_LENGTH + 6} bytes of input data, received: ${inBuffer.byteLength} bytes`,
             );
-        if (inBuffer.byteLength <= 5) { // 4 - only head; 5 - head + Le (Case1 or Case2)
+
+        if (inBuffer.byteLength === 4) { // only head
+            this.bLength = inBuffer.byteLength;
+            if (CommandApdu.AUTO_LE) {
+                this.bLength += 1;
+            } else {
+                this.hasLe = false;
+            }
+        } else if (inBuffer.byteLength === 5) { // head + Le
             this.bLength = inBuffer.byteLength;
         } else {
             // if APDU is more than 5 bytes long, then there necessarily is an Lc value
@@ -104,8 +115,13 @@ export class CommandApdu {
 
             
             if (inBuffer.byteLength === expectedNoLeLength) { // passed data have no Le
+                this.bLength = inBuffer.byteLength;
                 // add Le automatically, if necessary.
-                this.bLength = CommandApdu.autoLe ? inBuffer.byteLength + 1 : inBuffer.byteLength ;
+                if (CommandApdu.AUTO_LE) {
+                    this.bLength += 1;
+                } else {
+                    this.hasLe = false
+                }
             } else if (inBuffer.byteLength === expectedNoLeLength + 1) {
                 // Le has been passed with the command data
                 this.bLength = inBuffer.byteLength;
@@ -297,7 +313,12 @@ export class CommandApdu {
 
     /** Directly sets Le byte value. If no value is provided, Le is set to 0. */
     setLe(le: number = 0): this {
-        this.byteArray[this.bLength - 1] = le;
+        if (this.hasLe) {
+            this.byteArray[this.bLength - 1] = le;
+        } else {
+            this.byteArray[this.bLength] = le;
+            this.bLength += 1;
+        }
         return this;
     }
 
@@ -308,7 +329,7 @@ export class CommandApdu {
 
     /** Returns Le byte value. */
     getLe(): number {
-        return this.byteArray[this.bLength - 1];
+        return this.hasLe ? this.byteArray[this.bLength - 1] : 0;
     }
 
     /** Returns Le byte value. */
